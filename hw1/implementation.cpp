@@ -119,52 +119,58 @@ public:
 	{
 		fillStore(minute);
 
-		// try to serve client
-		try
+		while (true)
 		{
-			Client_result cur2 = store_clients.current(minute);
-		}
-		catch (const std::invalid_argument &err)
-		{
-			return;
-		}
+			// try to serve client
+			try
+			{
+				Client_result cur = store_clients.current(minute);
+			}
+			catch (const std::invalid_argument &err)
+			{
+				return;
+			}
 
-		Client_result cur = store_clients.current(minute);
+			Client_result cur = store_clients.current(minute);
 
-		// client that needs to leave
-		if (cur.in_hurry)
-		{
-			int bananas_taken = calculate_banana(cur.client);
-			total_bananas -= bananas_taken;
-			int schweppes_taken = calculate_schweppes(cur.client);
-			total_schweppes -= schweppes_taken;
+			// client that needs to leave
+			if (cur.in_hurry)
+			{
+				int bananas_taken = calculate_banana(cur.client);
+				total_bananas -= bananas_taken;
+				int schweppes_taken = calculate_schweppes(cur.client);
+				total_schweppes -= schweppes_taken;
 
-			actionHandler->onClientDepart(cur.id, minute, bananas_taken, schweppes_taken);
+				actionHandler->onClientDepart(cur.id, minute, bananas_taken, schweppes_taken);
 
-			store_clients.removeClient(cur.id);
-		}
-		// try to serve current client
-		try
-		{
-			Client_result cur3 = store_clients.current(minute);
-		}
-		catch (const std::invalid_argument &err)
-		{
-			return;
-		}
+				store_clients.removeClient(cur.id);
+			}
+			// try to serve current client
+			try
+			{
+				Client_result cur = store_clients.current(minute);
+			}
+			catch (const std::invalid_argument &err)
+			{
+				return;
+			}
 
-		Client_result cur1 = store_clients.current(minute);
+			Client_result cur1 = store_clients.current(minute);
 
-		if (cur1.client.banana <= total_bananas && cur1.client.schweppes <= total_schweppes)
-		{
-			int bananas_taken = calculate_banana(cur1.client);
-			total_bananas -= bananas_taken;
-			int schweppes_taken = calculate_schweppes(cur1.client);
-			total_schweppes -= schweppes_taken;
+			if (cur1.client.banana <= total_bananas && cur1.client.schweppes <= total_schweppes)
+			{
+				int bananas_taken = calculate_banana(cur1.client);
+				total_bananas -= bananas_taken;
+				int schweppes_taken = calculate_schweppes(cur1.client);
+				total_schweppes -= schweppes_taken;
 
-			actionHandler->onClientDepart(cur1.id, minute, bananas_taken, schweppes_taken);
+				actionHandler->onClientDepart(cur1.id, minute, bananas_taken, schweppes_taken);
 
-			store_clients.removeClient(cur1.id);
+				store_clients.removeClient(cur1.id);
+				continue;
+			}
+
+			break;
 		}
 
 		// order products

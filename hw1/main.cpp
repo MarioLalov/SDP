@@ -36,9 +36,9 @@ int main()
     
     for(int i = 0; i < 202; i++)
     {
-        if(i == 107)
+        if(i == 201)
         {
-        //  std::cout << "a";
+          std::cout << "a";
         }
         store.advanceTo(i);
     }
