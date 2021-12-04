@@ -1,269 +1,252 @@
+#include "implementation.h"
 
-#include "interface.h"
-#include "queue.h"
-#include <iostream>
-
-struct Worker
+void MyActionHandler::onWorkerSend(int minute, ResourceType resource)
 {
-	ResourceType resource;
-	unsigned int time_of_arrival;
+	std::cout << "W " << minute << " ";
+	switch (resource)
+	{
+	case ResourceType::banana:
+		std::cout << "banana";
+		break;
+	case ResourceType::schweppes:
+		std::cout << "schweppes";
+		break;
+	}
 
-	Worker(ResourceType type, unsigned int time)
-		: resource(type), time_of_arrival(time) {}
-};
+	std::cout << std::endl;
+}
 
-struct MyActionHandler : ActionHandler
+void MyActionHandler::onWorkerBack(int minute, ResourceType resource)
 {
-	void onWorkerSend(int minute, ResourceType resource)
+	std::cout << "D " << minute << " ";
+	switch (resource)
 	{
-		std::cout << "W " << minute << " ";
-		switch (resource)
-		{
-		case ResourceType::banana:
-			std::cout << "banana";
-			break;
-		case ResourceType::schweppes:
-			std::cout << "schweppes";
-			break;
-		}
-
-		std::cout << std::endl;
+	case ResourceType::banana:
+		std::cout << "banana";
+		break;
+	case ResourceType::schweppes:
+		std::cout << "schweppes";
+		break;
 	}
 
-	void onWorkerBack(int minute, ResourceType resource)
-	{
-		std::cout << "D " << minute << " ";
-		switch (resource)
-		{
-		case ResourceType::banana:
-			std::cout << "banana";
-			break;
-		case ResourceType::schweppes:
-			std::cout << "schweppes";
-			break;
-		}
+	std::cout << std::endl;
+}
 
-		std::cout << std::endl;
-	}
-
-	void onClientDepart(int index, int minute, int banana, int schweppes)
-	{
-		std::cout << index << " " << minute << " " << banana << " " << schweppes << std::endl;
-	}
-};
-
-struct MyStore : Store
+void MyActionHandler::onClientDepart(int index, int minute, int banana, int schweppes)
 {
-private:
-	ActionHandler *actionHandler = nullptr;
-	Queue store_clients;
-	unsigned int workers;
+	std::cout << index << " " << minute << " " << banana << " " << schweppes << std::endl;
+}
 
-	unsigned int total_bananas;
-	unsigned int total_schweppes;
-	unsigned int required_bananas;
-	unsigned int required_schweppes;
+void MyStore::setActionHandler(ActionHandler *handler)
+{
+	actionHandler = handler;
+}
+void MyStore::init(int workerCount, int startBanana, int startSchweppes)
+{
+	workers = workerCount;
+	total_bananas = startBanana;
+	total_schweppes = startSchweppes;
+}
 
-	std::vector<Worker> workers_on_duty;
-
-public:
-	void setActionHandler(ActionHandler *handler) override
+void MyStore::addClients(const Client *clients, int count)
+{
+	if(!clients)
 	{
-		actionHandler = handler;
+		throw std::invalid_argument("Empty client list!");
 	}
 
-	void init(int workerCount, int startBanana, int startSchweppes) override
-	{
-		workers = workerCount;
-		total_bananas = startBanana;
-		total_schweppes = startSchweppes;
-	}
+	store_clients.initialize(clients, count);
+}
 
-	void addClients(const Client *clients, int count) override
-	{
-		// TODO check for nullptr
-		store_clients.initialize(clients, count);
-	}
+unsigned int MyStore::orderedBananas()
+{
+	unsigned int total = 0;
 
-	unsigned int orderedBananas()
+	for (std::size_t i = 0; i < workers_on_duty.size(); i++)
 	{
-		unsigned int total = 0;
-
-		for (std::size_t i = 0; i < workers_on_duty.size(); i++)
+		if (workers_on_duty[i].resource == ResourceType::banana)
 		{
-			if (workers_on_duty[i].resource == ResourceType::banana)
-			{
-				total += 100;
-			}
+			total += 100;
 		}
-
-		return total;
 	}
 
-	unsigned int orderedSchweppes()
-	{
-		unsigned int total = 0;
+	return total;
+}
 
-		for (std::size_t i = 0; i < workers_on_duty.size(); i++)
+unsigned int MyStore::orderedSchweppes()
+{
+	unsigned int total = 0;
+
+	for (std::size_t i = 0; i < workers_on_duty.size(); i++)
+	{
+		if (workers_on_duty[i].resource == ResourceType::schweppes)
 		{
-			if (workers_on_duty[i].resource == ResourceType::schweppes)
-			{
-				total += 100;
-			}
+			total += 100;
 		}
-
-		return total;
 	}
 
-	void advanceTo(int minute) override
+	return total;
+}
+
+void MyStore::advanceToHelper(int minute)
+{
+	fillStore(minute);
+
+	while (true)
 	{
-		fillStore(minute);
-
-		while (true)
+		// try to serve client
+		try
 		{
-			// try to serve client
-			try
-			{
-				Client_result cur = store_clients.current(minute);
-			}
-			catch (const std::invalid_argument &err)
-			{
-				return;
-			}
-
 			Client_result cur = store_clients.current(minute);
-
-			// client that needs to leave
-			if (cur.in_hurry)
-			{
-				int bananas_taken = calculate_banana(cur.client);
-				total_bananas -= bananas_taken;
-				int schweppes_taken = calculate_schweppes(cur.client);
-				total_schweppes -= schweppes_taken;
-
-				actionHandler->onClientDepart(cur.id, minute, bananas_taken, schweppes_taken);
-
-				store_clients.removeClient(cur.id);
-			}
-			// try to serve current client
-			try
-			{
-				Client_result cur = store_clients.current(minute);
-			}
-			catch (const std::invalid_argument &err)
-			{
-				return;
-			}
-
-			Client_result cur1 = store_clients.current(minute);
-
-			if (cur1.client.banana <= total_bananas && cur1.client.schweppes <= total_schweppes)
-			{
-				int bananas_taken = calculate_banana(cur1.client);
-				total_bananas -= bananas_taken;
-				int schweppes_taken = calculate_schweppes(cur1.client);
-				total_schweppes -= schweppes_taken;
-
-				actionHandler->onClientDepart(cur1.id, minute, bananas_taken, schweppes_taken);
-
-				store_clients.removeClient(cur1.id);
-				continue;
-			}
-
-			break;
 		}
-
-		// order products
-		unsigned int required_bananas = store_clients.getRequiredBananas();
-		unsigned int required_schweppes = store_clients.getRequiredSchweppes();
-
-		if (required_bananas > orderedBananas() + total_bananas)
+		catch (const std::invalid_argument &err)
 		{
-			if (workers != 0)
-			{
-				Worker worker_to_be_sent(ResourceType::banana, minute + 60);
-				workers--;
-				workers_on_duty.push_back(Worker(ResourceType::banana, minute + 60));
-
-				actionHandler->onWorkerSend(minute, ResourceType::banana);
-			}
+			return;
 		}
 
-		if (required_schweppes > orderedSchweppes() + total_schweppes)
+		Client_result cur = store_clients.current(minute);
+
+		// client that needs to leave
+		if (cur.in_hurry)
 		{
-			if (workers != 0)
-			{
-				Worker worker_to_be_sent(ResourceType::schweppes, minute + 60);
-				workers--;
-				workers_on_duty.push_back(Worker(ResourceType::schweppes, minute + 60));
+			//std::cout << "ENTER" <<std::endl;
+			int bananas_taken = calculate_banana(cur.client);
+			total_bananas -= bananas_taken;
+			int schweppes_taken = calculate_schweppes(cur.client);
+			total_schweppes -= schweppes_taken;
 
-				actionHandler->onWorkerSend(minute, ResourceType::schweppes);
-			}
+			actionHandler->onClientDepart(cur.id, minute, bananas_taken, schweppes_taken);
+
+			store_clients.removeClient(cur.id);
 		}
-	}
-
-	int calculate_banana(const Client &client)
-	{
-		int bananas_signed = total_bananas;
-		return (bananas_signed - client.banana > 0) ? client.banana : bananas_signed;
-	}
-
-	int calculate_schweppes(const Client &client)
-	{
-		int schweppes_signed = total_schweppes;
-		return (schweppes_signed - client.schweppes > 0) ? client.schweppes : schweppes_signed;
-	}
-
-	void fillStore(unsigned int minute)
-	{
-		for (std::size_t i = 0; i < workers_on_duty.size(); i++)
+		// try to serve current client
+		try
 		{
-			if (workers_on_duty[i].time_of_arrival == minute)
-			{
-				switch (workers_on_duty[i].resource)
-				{
-				case ResourceType::banana:
-					total_bananas += 100;
-					break;
-				case ResourceType::schweppes:
-					total_schweppes += 100;
-					break;
-				}
-
-				actionHandler->onWorkerBack(workers_on_duty[i].time_of_arrival, workers_on_duty[i].resource);
-
-				workers_on_duty.erase(workers_on_duty.begin() + i);
-
-				workers++;
-			}
+			Client_result cur = store_clients.current(minute);
 		}
-	}
-
-	bool checkFor(ResourceType resource)
-	{
-		for (std::size_t i = 0; i < workers_on_duty.size(); i++)
+		catch (const std::invalid_argument &err)
 		{
-			if (workers_on_duty[i].resource == resource)
-			{
-				return true;
-			}
+			return;
 		}
 
-		return false;
+		Client_result cur1 = store_clients.current(minute);
+
+		if (cur1.client.banana <= total_bananas && cur1.client.schweppes <= total_schweppes)
+		{
+			int bananas_taken = calculate_banana(cur1.client);
+			total_bananas -= bananas_taken;
+			int schweppes_taken = calculate_schweppes(cur1.client);
+			total_schweppes -= schweppes_taken;
+
+			actionHandler->onClientDepart(cur1.id, minute, bananas_taken, schweppes_taken);
+
+			store_clients.removeClient(cur1.id);
+			continue;
+		}
+
+		break;
 	}
 
-	int getBanana() const
+	// order products
+	unsigned int required_bananas = store_clients.getRequiredBananas();
+	unsigned int required_schweppes = store_clients.getRequiredSchweppes();
+
+	if (required_bananas > orderedBananas() + total_bananas)
 	{
-		return total_bananas;
+		if (workers != 0)
+		{
+			Worker worker_to_be_sent(ResourceType::banana, minute + 60);
+			workers--;
+			workers_on_duty.push_back(Worker(ResourceType::banana, minute + 60));
+
+			actionHandler->onWorkerSend(minute, ResourceType::banana);
+		}
 	}
 
-	int getSchweppes() const
+	if (required_schweppes > orderedSchweppes() + total_schweppes)
 	{
-		return total_schweppes;
-	}
-};
+		if (workers != 0)
+		{
+			Worker worker_to_be_sent(ResourceType::schweppes, minute + 60);
+			workers--;
+			workers_on_duty.push_back(Worker(ResourceType::schweppes, minute + 60));
 
-/*Store *createStore()
+			actionHandler->onWorkerSend(minute, ResourceType::schweppes);
+		}
+	}
+}
+
+void MyStore::advanceTo(int minute)
 {
-	return new MyStore();
-}*/
+	for(int i = 0; i <= minute; i++)
+	{
+		advanceToHelper(i);
+	}
+	
+	//minute_calculated = minute + 1;
+}
+
+int MyStore::calculate_banana(const Client &client)
+{
+	int bananas_signed = total_bananas;
+	return (bananas_signed - client.banana > 0) ? client.banana : bananas_signed;
+}
+
+int MyStore::calculate_schweppes(const Client &client)
+{
+	int schweppes_signed = total_schweppes;
+	return (schweppes_signed - client.schweppes > 0) ? client.schweppes : schweppes_signed;
+}
+
+void MyStore::fillStore(unsigned int minute)
+{
+	for (std::size_t i = 0; i < workers_on_duty.size(); i++)
+	{
+		if (workers_on_duty[i].time_of_arrival == minute)
+		{
+			switch (workers_on_duty[i].resource)
+			{
+			case ResourceType::banana:
+				total_bananas += 100;
+				break;
+			case ResourceType::schweppes:
+				total_schweppes += 100;
+				break;
+			}
+
+			actionHandler->onWorkerBack(workers_on_duty[i].time_of_arrival, workers_on_duty[i].resource);
+
+			workers_on_duty.erase(workers_on_duty.begin() + i);
+
+			workers++;
+		}
+	}
+}
+
+bool MyStore::checkFor(ResourceType resource)
+{
+	for (std::size_t i = 0; i < workers_on_duty.size(); i++)
+	{
+		if (workers_on_duty[i].resource == resource)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+int MyStore::getBanana() const
+{
+	return total_bananas;
+}
+
+int MyStore::getSchweppes() const
+{
+	return total_schweppes;
+}
+
+Store *createStore()
+{
+	return new MyStore;
+}

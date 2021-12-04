@@ -76,4 +76,4 @@ struct Store {
 
 /// This function must create new instance of your store
 /// This will be used by the tests to create a store to test
-//Store *createStore();
+Store *createStore();

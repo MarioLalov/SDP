@@ -1,7 +1,8 @@
 #define CATCH_CONFIG_MAIN
 
-#include "interface.h"
 #include "catch.hpp"
+#include "interface.h"
+#include "implementation.h"
 
 #include <vector>
 
@@ -203,7 +204,7 @@ TEST_CASE("Multiple stores") {
 	schweppesStore.init(0, 0, 100);
 
 	SECTION("Two stores") {
-		INFO("Multiple stores must be ebable to exist at the same time")
+		INFO("Multiple stores must be ebable to exist at the same time");
 
 		REQUIRE(bananaStore.getBanana() == 100);
 		REQUIRE(bananaStore.getSchweppes() == 0);

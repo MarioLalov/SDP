@@ -1,42 +1,55 @@
 #include "queue.h"
 #include <iostream>
 
-//Client_result& Client_result::operator=(const Client& other)
+// Client_result& Client_result::operator=(const Client& other)
 
-unsigned int Queue::count = 0;
+//unsigned int Queue::count = 0;
 
 void Queue::initialize(const Client *in_client_list, std::size_t size)
 {
-    //TODO error for already initalized
-    client_list = new Client[size];
+    // if(client_list)
+    //{
+    //  throw std::invalid_argument("Already initialized");
+    //}
 
+    //    client_list = new Client[3];
+
+    count = 0;
+    client_list.clear();
+    clients.clear();
+    ids.clear();
     for (std::size_t i = 0; i < size; i++)
     {
-        client_list[i] = in_client_list[i];
+        client_list.push_back(in_client_list[i]);
     }
 }
 
 void Queue::clientArrive(unsigned int minute)
 {
-    if (count < 4 && client_list[count].arriveMinute == minute)
-    {
-        //let client in
-        clients.push_back(client_list[count]);
-        ids.push_back(count);
+    //while (client_list.size() > count && client_list[count].arriveMinute <= minute)
+    //{
+        if (/*count < 4*/ client_list.size() > count && client_list[count].arriveMinute == minute)
+        {
+            // let client in
+            clients.push_back(client_list[count]);
+            ids.push_back(count);
 
-        count++;
-    }
+            count++;
+        }
+    //}
 }
 
 const Client_result Queue::current(unsigned int minute)
 {
-    //let clients in if such exist
+    // let clients in if such exist
     clientArrive(minute);
 
-    if(clients.size() < 1)
+    if (clients.size() < 1)
     {
         throw std::invalid_argument("No clients");
     }
+
+    //std::cout << "Size:" << clients.size() << std::endl;
 
     for (std::size_t i = 0; i < clients.size(); i++)
     {
@@ -51,9 +64,9 @@ const Client_result Queue::current(unsigned int minute)
 
 void Queue::removeClient(unsigned int id)
 {
-    for(std::size_t i = 0; i < ids.size(); i++)
+    for (std::size_t i = 0; i < ids.size(); i++)
     {
-        if(ids[i] == id)
+        if (ids[i] == id)
         {
             ids.erase(ids.begin() + i);
             clients.erase(clients.begin() + i);
@@ -89,8 +102,8 @@ unsigned int Queue::getRequiredSchweppes()
 
 Queue::~Queue()
 {
-    if (client_list)
-    {
-        delete[] client_list;
-    }
+    // if (client_list)
+    //{
+    //   delete[] client_list;
+    //}
 }

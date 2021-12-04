@@ -15,11 +15,12 @@ struct Client_result
 class Queue
 {
 private:
-    static unsigned int count;
+    unsigned int count;
 
     std::vector<int> ids;
     std::size_t clients_served = 0;
-    Client *client_list = nullptr;
+    //Client *client_list = nullptr;
+    std::vector<Client> client_list;
     std::vector<Client> clients;
 
 public:
