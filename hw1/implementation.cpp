@@ -91,6 +91,35 @@ unsigned int MyStore::orderedSchweppes()
 void MyStore::advanceToHelper(int minute)
 {
 	fillStore(minute);
+	store_clients.clientArrive(minute);
+
+		// order products
+	unsigned int required_bananas = store_clients.getRequiredBananas();
+	unsigned int required_schweppes = store_clients.getRequiredSchweppes();
+
+	if (required_bananas > orderedBananas() + total_bananas)
+	{
+		if (workers != 0)
+		{
+			Worker worker_to_be_sent(ResourceType::banana, minute + 60);
+			workers--;
+			workers_on_duty.push_back(Worker(ResourceType::banana, minute + 60));
+
+			actionHandler->onWorkerSend(minute, ResourceType::banana);
+		}
+	}
+
+	if (required_schweppes > orderedSchweppes() + total_schweppes)
+	{
+		if (workers != 0)
+		{
+			Worker worker_to_be_sent(ResourceType::schweppes, minute + 60);
+			workers--;
+			workers_on_duty.push_back(Worker(ResourceType::schweppes, minute + 60));
+
+			actionHandler->onWorkerSend(minute, ResourceType::schweppes);
+		}
+	}
 
 	while (true)
 	{
@@ -145,34 +174,6 @@ void MyStore::advanceToHelper(int minute)
 		}
 
 		break;
-	}
-
-	// order products
-	unsigned int required_bananas = store_clients.getRequiredBananas();
-	unsigned int required_schweppes = store_clients.getRequiredSchweppes();
-
-	if (required_bananas > orderedBananas() + total_bananas)
-	{
-		if (workers != 0)
-		{
-			Worker worker_to_be_sent(ResourceType::banana, minute + 60);
-			workers--;
-			workers_on_duty.push_back(Worker(ResourceType::banana, minute + 60));
-
-			actionHandler->onWorkerSend(minute, ResourceType::banana);
-		}
-	}
-
-	if (required_schweppes > orderedSchweppes() + total_schweppes)
-	{
-		if (workers != 0)
-		{
-			Worker worker_to_be_sent(ResourceType::schweppes, minute + 60);
-			workers--;
-			workers_on_duty.push_back(Worker(ResourceType::schweppes, minute + 60));
-
-			actionHandler->onWorkerSend(minute, ResourceType::schweppes);
-		}
 	}
 }
 

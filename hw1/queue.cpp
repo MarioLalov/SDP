@@ -33,6 +33,8 @@ void Queue::clientArrive(unsigned int minute)
             // let client in
             clients.push_back(client_list[count]);
             ids.push_back(count);
+            clients_served_banana++;
+            clients_served_schweppes++;
 
             count++;
         }
@@ -78,12 +80,12 @@ unsigned int Queue::getRequiredBananas()
 {
     unsigned int total = 0;
 
-    for (std::size_t i = clients_served; i < clients.size(); i++)
+    for (std::size_t i = clients.size() - 1, j = clients_served_banana; j > 0; i--, j--)
     {
         total += clients[i].banana;
     }
 
-    clients_served = clients.size();
+    clients_served_banana = 0;
 
     return total;
 }
@@ -92,10 +94,12 @@ unsigned int Queue::getRequiredSchweppes()
 {
     unsigned int total = 0;
 
-    for (std::size_t i = 0; i < clients.size(); i++)
+    for (std::size_t i = clients.size() - 1, j = clients_served_schweppes; j > 0; i--, j--)
     {
         total += clients[i].schweppes;
     }
+
+    clients_served_schweppes = 0;
 
     return total;
 }

@@ -18,7 +18,9 @@ private:
     unsigned int count;
 
     std::vector<int> ids;
-    std::size_t clients_served = 0;
+    //std::size_t clients_arrived = 0;
+    std::size_t clients_served_banana = 0;
+    std::size_t clients_served_schweppes = 0;
     //Client *client_list = nullptr;
     std::vector<Client> client_list;
     std::vector<Client> clients;
