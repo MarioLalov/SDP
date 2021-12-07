@@ -1,23 +1,14 @@
 #include "queue.h"
 #include <iostream>
 
-// Client_result& Client_result::operator=(const Client& other)
-
-//unsigned int Queue::count = 0;
-
 void Queue::initialize(const Client *in_client_list, std::size_t size)
 {
-    // if(client_list)
-    //{
-    //  throw std::invalid_argument("Already initialized");
-    //}
-
-    //    client_list = new Client[3];
-
+    // clear all previous data
     count = 0;
     client_list.clear();
     clients.clear();
     ids.clear();
+
     for (std::size_t i = 0; i < size; i++)
     {
         client_list.push_back(in_client_list[i]);
@@ -26,19 +17,19 @@ void Queue::initialize(const Client *in_client_list, std::size_t size)
 
 void Queue::clientArrive(unsigned int minute)
 {
-    //while (client_list.size() > count && client_list[count].arriveMinute <= minute)
-    //{
-        if (/*count < 4*/ client_list.size() > count && client_list[count].arriveMinute == minute)
-        {
-            // let client in
-            clients.push_back(client_list[count]);
-            ids.push_back(count);
-            clients_served_banana++;
-            clients_served_schweppes++;
+    if (client_list.size() > count && client_list[count].arriveMinute == minute)
+    {
+        // let client in
+        clients.push_back(client_list[count]);
+        // assign id
+        ids.push_back(count);
 
-            count++;
-        }
-    //}
+        // count clients that have arrived
+        clients_served_banana++;
+        clients_served_schweppes++;
+
+        count++;
+    }
 }
 
 const Client_result Queue::current(unsigned int minute)
@@ -46,21 +37,23 @@ const Client_result Queue::current(unsigned int minute)
     // let clients in if such exist
     clientArrive(minute);
 
+    // throw if there is no client in the queue
     if (clients.size() < 1)
     {
         throw std::invalid_argument("No clients");
     }
 
-    //std::cout << "Size:" << clients.size() << std::endl;
-
+    // return current client whether he is in a hurry or not
     for (std::size_t i = 0; i < clients.size(); i++)
     {
         if (minute == clients[i].arriveMinute + clients[i].maxWaitTime)
         {
+            // client must leave
             return {ids[i], clients[i], true};
         }
     }
 
+    // client on turn
     return {ids[0], clients[0], false};
 }
 
@@ -102,12 +95,4 @@ unsigned int Queue::getRequiredSchweppes()
     clients_served_schweppes = 0;
 
     return total;
-}
-
-Queue::~Queue()
-{
-    // if (client_list)
-    //{
-    //   delete[] client_list;
-    //}
 }

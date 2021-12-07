@@ -8,56 +8,31 @@ int main()
     Store *store = createStore();
     MyActionHandler *handler = new MyActionHandler();
     store->setActionHandler(handler);
-    store->init(5, 0, 0);
 
-    Client *clients = new Client[4];
+    int input;
+    std::cout << "Number of workers:";
+    std::cin >> input;
+    store->init(input, 0, 0);
 
-    clients[0].arriveMinute = 0;
-    clients[0].maxWaitTime = 10;
-    clients[0].banana = 10;
-    clients[0].schweppes = 0;
+    std::cout << "Number of clients:";
+    std::cin >> input;
 
-    clients[1].arriveMinute = 45;
-    clients[1].maxWaitTime = 30;
-    clients[1].banana = 35;
-    clients[1].schweppes = 0;
+    Client *clients = new Client[input];
 
-    clients[2].arriveMinute = 46;
-    clients[2].maxWaitTime = 100;
-    clients[2].banana = 30;
-    clients[2].schweppes = 20;
-
-    clients[3].arriveMinute = 200;
-    clients[3].maxWaitTime = 1;
-    clients[3].banana = 10;
-    clients[3].schweppes = 10;
-
-     store->addClients(clients, 4);
-    // Client test = Client{0, 1, 1, 1};
-    // store->addClients(&test, 1);
-    // store->advanceTo(1);
-
-    //Client test1 = Client{0, 0, 10, 0};
-   // Client test2 = Client{1, 20, 0, 5};
-  //  Client cli[2] = {test1, test2};
-   // store->addClients(cli, 2);
-
-    //store->advanceTo(3);
-    //store->advanceTo(0);
-
-    /*for(int i = 0; i < 202; i++)
+    for (std::size_t i = 0; i < input; i++)
     {
-        if(i == 10)
-        {
-        //  std::cout << std::endl;
-        }
-        store->advanceTo(i);
-    }*/
-     store->advanceTo(2002);
+        std::cout << "Client " << i + 1 << ":";
+        std::cin >> clients[i].arriveMinute >> clients[i].banana >> clients[i].schweppes >> clients[i].maxWaitTime;
+    }
+
+    std::cout << std::endl
+              << "Output:" << std::endl;
+
+    store->addClients(clients, input);
+    store->advanceTo(clients[input - 1].arriveMinute + clients[input - 1].maxWaitTime);
 
     delete store;
-
-    //delete[] clients;
+    delete[] clients;
     delete handler;
 
     return 0;

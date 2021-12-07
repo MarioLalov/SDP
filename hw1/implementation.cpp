@@ -41,6 +41,7 @@ void MyStore::setActionHandler(ActionHandler *handler)
 {
 	actionHandler = handler;
 }
+
 void MyStore::init(int workerCount, int startBanana, int startSchweppes)
 {
 	workers = workerCount;
@@ -50,7 +51,8 @@ void MyStore::init(int workerCount, int startBanana, int startSchweppes)
 
 void MyStore::addClients(const Client *clients, int count)
 {
-	if(!clients)
+	// check arguments validity
+	if (!clients)
 	{
 		throw std::invalid_argument("Empty client list!");
 	}
@@ -66,7 +68,7 @@ unsigned int MyStore::orderedBananas()
 	{
 		if (workers_on_duty[i].resource == ResourceType::banana)
 		{
-			total += 100;
+			total += AMOUNT;
 		}
 	}
 
@@ -81,7 +83,7 @@ unsigned int MyStore::orderedSchweppes()
 	{
 		if (workers_on_duty[i].resource == ResourceType::schweppes)
 		{
-			total += 100;
+			total += AMOUNT;
 		}
 	}
 
@@ -91,19 +93,23 @@ unsigned int MyStore::orderedSchweppes()
 void MyStore::advanceToHelper(int minute)
 {
 	fillStore(minute);
+	// let client in if such exists
 	store_clients.clientArrive(minute);
 
-		// order products
+	// order products
+
+	// get the required amount
 	unsigned int required_bananas = store_clients.getRequiredBananas();
 	unsigned int required_schweppes = store_clients.getRequiredSchweppes();
 
+	// restock if needed
 	if (required_bananas > orderedBananas() + total_bananas)
 	{
 		if (workers != 0)
 		{
-			Worker worker_to_be_sent(ResourceType::banana, minute + 60);
+			Worker worker_to_be_sent(ResourceType::banana, minute + TIME);
 			workers--;
-			workers_on_duty.push_back(Worker(ResourceType::banana, minute + 60));
+			workers_on_duty.push_back(Worker(ResourceType::banana, minute + TIME));
 
 			actionHandler->onWorkerSend(minute, ResourceType::banana);
 		}
@@ -113,9 +119,9 @@ void MyStore::advanceToHelper(int minute)
 	{
 		if (workers != 0)
 		{
-			Worker worker_to_be_sent(ResourceType::schweppes, minute + 60);
+			Worker worker_to_be_sent(ResourceType::schweppes, minute + TIME);
 			workers--;
-			workers_on_duty.push_back(Worker(ResourceType::schweppes, minute + 60));
+			workers_on_duty.push_back(Worker(ResourceType::schweppes, minute + TIME));
 
 			actionHandler->onWorkerSend(minute, ResourceType::schweppes);
 		}
@@ -123,7 +129,7 @@ void MyStore::advanceToHelper(int minute)
 
 	while (true)
 	{
-		// try to serve client
+		// try to serve client if such exists
 		try
 		{
 			Client_result cur = store_clients.current(minute);
@@ -138,7 +144,6 @@ void MyStore::advanceToHelper(int minute)
 		// client that needs to leave
 		if (cur.in_hurry)
 		{
-			//std::cout << "ENTER" <<std::endl;
 			int bananas_taken = calculate_banana(cur.client);
 			total_bananas -= bananas_taken;
 			int schweppes_taken = calculate_schweppes(cur.client);
@@ -148,7 +153,8 @@ void MyStore::advanceToHelper(int minute)
 
 			store_clients.removeClient(cur.id);
 		}
-		// try to serve current client
+
+		// try to serve current client on queue if suche exists
 		try
 		{
 			Client_result cur = store_clients.current(minute);
@@ -179,12 +185,11 @@ void MyStore::advanceToHelper(int minute)
 
 void MyStore::advanceTo(int minute)
 {
-	for(int i = 0; i <= minute; i++)
+	// calculate for each previous minute
+	for (int i = 0; i <= minute; i++)
 	{
 		advanceToHelper(i);
 	}
-	
-	//minute_calculated = minute + 1;
 }
 
 int MyStore::calculate_banana(const Client &client)
@@ -203,38 +208,25 @@ void MyStore::fillStore(unsigned int minute)
 {
 	for (std::size_t i = 0; i < workers_on_duty.size(); i++)
 	{
+		// get all workers that arrive in the current minute
 		if (workers_on_duty[i].time_of_arrival == minute)
 		{
 			switch (workers_on_duty[i].resource)
 			{
 			case ResourceType::banana:
-				total_bananas += 100;
+				total_bananas += AMOUNT;
 				break;
 			case ResourceType::schweppes:
-				total_schweppes += 100;
+				total_schweppes += AMOUNT;
 				break;
 			}
 
 			actionHandler->onWorkerBack(workers_on_duty[i].time_of_arrival, workers_on_duty[i].resource);
 
 			workers_on_duty.erase(workers_on_duty.begin() + i);
-
 			workers++;
 		}
 	}
-}
-
-bool MyStore::checkFor(ResourceType resource)
-{
-	for (std::size_t i = 0; i < workers_on_duty.size(); i++)
-	{
-		if (workers_on_duty[i].resource == resource)
-		{
-			return true;
-		}
-	}
-
-	return false;
 }
 
 int MyStore::getBanana() const

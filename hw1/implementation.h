@@ -5,6 +5,10 @@
 #include <vector>
 #include <iostream>
 
+const unsigned int TIME = 60;
+const unsigned int AMOUNT = 100;
+
+// represents workers that are out for delivery
 struct Worker
 {
 	ResourceType resource;
@@ -26,8 +30,6 @@ struct MyStore : Store
 private:
 	ActionHandler *actionHandler = nullptr;
 	Queue store_clients;
-	unsigned int workers;
-	//unsigned int minute_calculated = 0;
 
 	unsigned int total_bananas;
 	unsigned int total_schweppes;
@@ -35,29 +37,36 @@ private:
 	unsigned int required_schweppes;
 
 	std::vector<Worker> workers_on_duty;
+	unsigned int workers;
 
 public:
 	void setActionHandler(ActionHandler *handler) override;
 
 	void init(int workerCount, int startBanana, int startSchweppes) override;
 
+	// initalize queue with given clients
 	void addClients(const Client *clients, int count) override;
 
+	// returns the amount of banans that is ordered
 	unsigned int orderedBananas();
 
+	// returns the amount of schweppes that is ordered
 	unsigned int orderedSchweppes();
 
+	// advanceTo for individual minute
 	void advanceToHelper(int minute);
 
+	// calculates action for ever minute that is <= given minute
 	void advanceTo(int minute) override;
 
+	// returns the number of bananas that the client will take
 	int calculate_banana(const Client &client);
 
+	// returns the number of schweppes that the client will take
 	int calculate_schweppes(const Client &client);
 
+	// get all workers that return in the current minute and update the resources
 	void fillStore(unsigned int minute);
-
-	bool checkFor(ResourceType resource);
 
 	int getBanana() const;
 
