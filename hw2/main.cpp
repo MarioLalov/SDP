@@ -7,11 +7,13 @@ int main()
     std::string str = "pesho-gosho\npesho-sasho\npesho-tosho\ntosho-ivan\n";
 
     Hierarchy *create = new Hierarchy(str);
+    create->hire("ceco", "ivan");
 
-    HierarchyIter *iter = new HierarchyIter(create);
-    Person *found = getPerson("ivn", iter);
+    //HierarchyIter *iter = new HierarchyIter(create);
+    create->fire("tosho");
+    //Person *found = getPerson("ceco", iter);
 
-    std::cout << create->manager("pesho");
+    std::cout << create->manager("ivan");
 
     // delete create;
     // delete iter;

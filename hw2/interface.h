@@ -17,8 +17,11 @@ private:
 public:
     Person(const std::string in_name, Person *boss);
     void addSubordinate(Person *new_subordiante);
-    //Person *traverse(const std::string &name, Person *cur) const;
     string getName() const;
+    std::vector<Person*> getSubordinates() const;
+    std::size_t subordinatesNumber() const;
+
+    void removeSubordinate(const std::string& who);
 
     friend class HierarchyIter;
 };
@@ -28,23 +31,23 @@ class Hierarchy
 public:
     Hierarchy(Hierarchy &&r) noexcept;
     Hierarchy(const Hierarchy &r);
-    Hierarchy(const string &data);
+    Hierarchy(const string &data);//done
     ~Hierarchy() noexcept;
     void operator=(const Hierarchy &) = delete;
 
     string print() const;
 
     int longest_chain() const;
-    bool find(const string &name) const;
-    int num_employees() const;
+    bool find(const string &name) const;//done
+    int num_employees() const;//done
     int num_overloaded(int level = 20) const;
 
-    string manager(const string &name) const;
-    int num_subordinates(const string &name) const;
+    string manager(const string &name) const;//done
+    int num_subordinates(const string &name) const;//done
     unsigned long getSalary(const string &who) const;
 
-    bool fire(const string &who);
-    bool hire(const string &who, const string &boss);
+    bool fire(const string &who);//done
+    bool hire(const string &who, const string &boss);//done
 
     void incorporate();
     void modernize();
@@ -52,12 +55,16 @@ public:
     Hierarchy join(const Hierarchy &right) const;
 
     // If you need it - add more public methods here
+    Hierarchy(Person* head);
     HierarchyIter *iter() const;
     //Person *getPerson(const std::string &name) const;
 
 private:
     Person *head_manager = nullptr;
+    std::size_t total_employees = 0;
+    //add iter as a a property
     // Add whatever you need here
+    Hierarchy* getSubtree(Person* head);
     friend class HierarchyIter;
 };
 
