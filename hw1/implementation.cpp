@@ -51,7 +51,7 @@ void MyStore::init(int workerCount, int startBanana, int startSchweppes)
 
 void MyStore::addClients(const Client *clients, int count)
 {
-	// check arguments validity
+	// check if argument is valid
 	if (!clients)
 	{
 		throw std::invalid_argument("Empty client list!");
@@ -97,7 +97,6 @@ void MyStore::advanceToHelper(int minute)
 	store_clients.clientArrive(minute);
 
 	// order products
-
 	// get the required amount
 	unsigned int required_bananas = store_clients.getRequiredBananas();
 	unsigned int required_schweppes = store_clients.getRequiredSchweppes();
@@ -127,14 +126,16 @@ void MyStore::advanceToHelper(int minute)
 		}
 	}
 
-	while (true)
+	bool serving_clients = true;
+
+	while (serving_clients)
 	{
 		// try to serve client if such exists
 		try
 		{
 			Client_result cur = store_clients.current(minute);
 		}
-		catch (const std::invalid_argument &err)
+		catch (const QueueEmpty &err)
 		{
 			return;
 		}
@@ -154,12 +155,12 @@ void MyStore::advanceToHelper(int minute)
 			store_clients.removeClient(cur.id);
 		}
 
-		// try to serve current client on queue if suche exists
+		// try to serve current client if such exists
 		try
 		{
 			Client_result cur = store_clients.current(minute);
 		}
-		catch (const std::invalid_argument &err)
+		catch (const QueueEmpty &err)
 		{
 			return;
 		}
@@ -179,13 +180,13 @@ void MyStore::advanceToHelper(int minute)
 			continue;
 		}
 
-		break;
+		serving_clients = false;
 	}
 }
 
 void MyStore::advanceTo(int minute)
 {
-	// calculate for each previous minute
+	// calculate for each minute
 	for (int i = 0; i <= minute; i++)
 	{
 		advanceToHelper(i);

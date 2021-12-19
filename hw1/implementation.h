@@ -8,7 +8,7 @@
 const unsigned int TIME = 60;
 const unsigned int AMOUNT = 100;
 
-// represents workers that are out for delivery
+// represents workers that are out for restocking
 struct Worker
 {
 	ResourceType resource;
@@ -53,10 +53,10 @@ public:
 	// returns the amount of schweppes that is ordered
 	unsigned int orderedSchweppes();
 
-	// advanceTo for individual minute
+	// advanceTo for an individual minute
 	void advanceToHelper(int minute);
 
-	// calculates action for ever minute that is <= given minute
+	// calculates the actions for every minute that is <= given minute
 	void advanceTo(int minute) override;
 
 	// returns the number of bananas that the client will take

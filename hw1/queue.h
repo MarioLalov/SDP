@@ -3,7 +3,15 @@
 #include <vector>
 #include "interface.h"
 
-// return type with specific info about th client
+struct QueueEmpty : public std::exception
+{
+	const char * what () const throw ()
+    {
+    	return "No client in queue!";
+    }
+};
+
+// return type with specific info about the client
 struct Client_result
 {
     int id;
@@ -21,7 +29,7 @@ private:
     std::vector<int> ids;
     // full client list
     std::vector<Client> client_list;
-    // client in the queue at the current minute
+    // clients waiting in queue
     std::vector<Client> clients;
 
     // clients whose requests have been ordered
@@ -37,7 +45,7 @@ public:
     // remove client by id
     void removeClient(unsigned int id);
 
-    // get the number of each resource that needs to be ordered
+    // get the amount that needs to be ordered
     unsigned int getRequiredBananas();
     unsigned int getRequiredSchweppes();
 };

@@ -40,7 +40,7 @@ const Client_result Queue::current(unsigned int minute)
     // throw if there is no client in the queue
     if (clients.size() < 1)
     {
-        throw std::invalid_argument("No clients");
+        throw QueueEmpty();
     }
 
     // return current client whether he is in a hurry or not
@@ -53,7 +53,7 @@ const Client_result Queue::current(unsigned int minute)
         }
     }
 
-    // client on turn
+    // client on top of the queue
     return {ids[0], clients[0], false};
 }
 
