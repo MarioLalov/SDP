@@ -10,10 +10,10 @@ int main()
     create->hire("ceco", "ivan");
 
     //HierarchyIter *iter = new HierarchyIter(create);
-    create->fire("tosho");
+    //create->fire("tosho");
     //Person *found = getPerson("ceco", iter);
 
-    std::cout << create->manager("ivan");
+    std::cout << create->getSalary("pesho");
 
     // delete create;
     // delete iter;

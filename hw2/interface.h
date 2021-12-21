@@ -44,7 +44,7 @@ public:
 
     string manager(const string &name) const;//done
     int num_subordinates(const string &name) const;//done
-    unsigned long getSalary(const string &who) const;
+    unsigned long getSalary(const string &who) const;//done
 
     bool fire(const string &who);//done
     bool hire(const string &who, const string &boss);//done
@@ -64,6 +64,7 @@ private:
     std::size_t total_employees = 0;
     //add iter as a a property
     // Add whatever you need here
+    void count(Person* cur);
     Hierarchy* getSubtree(Person* head);
     friend class HierarchyIter;
 };

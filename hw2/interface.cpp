@@ -33,7 +33,7 @@ string Person::getName() const
     return name;
 }
 
-std::vector<Person*> Person::getSubordinates() const
+std::vector<Person *> Person::getSubordinates() const
 {
     return subordinates;
 }
@@ -43,11 +43,11 @@ std::size_t Person::subordinatesNumber() const
     return subordinates.size();
 }
 
-void Person::removeSubordinate(const std::string& who)
+void Person::removeSubordinate(const std::string &who)
 {
-    for(std::size_t i = 0; i < subordinates.size(); i++)
+    for (std::size_t i = 0; i < subordinates.size(); i++)
     {
-        if(subordinates[i]->name == who)
+        if (subordinates[i]->name == who)
         {
             subordinates.erase(subordinates.begin() + i);
 
@@ -56,15 +56,33 @@ void Person::removeSubordinate(const std::string& who)
     }
 }
 
+void Hierarchy::count(Person *cur)
+{
+    if (cur->subordinatesNumber() == 0)
+    {
+        return;
+    }
+
+    std::vector<Person *> subordinates = cur->getSubordinates();
+
+    for (std::size_t i = 0; i < subordinates.size(); i++)
+    {
+        total_employees++;
+
+        count(subordinates[i]);
+    }
+}
+
 // hierarchy
-Hierarchy* getSubtree(Person* head)
+Hierarchy *getSubtree(Person *head)
 {
     return new Hierarchy(head);
 }
 
-Hierarchy::Hierarchy(Person* head)
+Hierarchy::Hierarchy(Person *head)
 {
     head_manager = head;
+    count(head);
 }
 
 Hierarchy::Hierarchy(const string &data)
@@ -138,13 +156,23 @@ int Hierarchy::num_subordinates(const string &name) const
 {
     // TODO: return negative if nullptr
     HierarchyIter *iter = new HierarchyIter(this);
+    Hierarchy subtree(getPerson(name, iter));
 
-    return getPerson(name, iter)->subordinatesNumber();
+    return subtree.num_employees();
 }
 
 int Hierarchy::num_employees() const
 {
     return total_employees;
+}
+
+unsigned long Hierarchy::getSalary(const string &who) const
+{
+    HierarchyIter *iter = new HierarchyIter(this);
+    unsigned int direct_subordinates = getPerson(who, iter)->subordinatesNumber();
+    unsigned int indirect_subordinates = num_subordinates(who) - direct_subordinates;
+
+    return 500*direct_subordinates + 50*indirect_subordinates;
 }
 
 bool Hierarchy::hire(const string &who, const string &boss)
@@ -163,15 +191,15 @@ bool Hierarchy::hire(const string &who, const string &boss)
 
 bool Hierarchy::fire(const string &who)
 {
-    HierarchyIter* iter = new HierarchyIter(this);
+    HierarchyIter *iter = new HierarchyIter(this);
 
-    Person* boss = getPerson(who, iter, PARENT);
-    Person* cur = getPerson(who, iter);
+    Person *boss = getPerson(who, iter, PARENT);
+    Person *cur = getPerson(who, iter);
 
-    std::vector<Person*> cur_subordinates = cur->getSubordinates();
+    std::vector<Person *> cur_subordinates = cur->getSubordinates();
     boss->removeSubordinate(who);
 
-    for(std::size_t i = 0; i < cur_subordinates.size(); i++)
+    for (std::size_t i = 0; i < cur_subordinates.size(); i++)
     {
         boss->addSubordinate(cur_subordinates[i]);
     }
@@ -179,6 +207,11 @@ bool Hierarchy::fire(const string &who)
     delete cur;
 }
 
+// not yet implemented
+Hierarchy::~Hierarchy()
+{
+    std::cout << "destruct" << std::endl;
+}
 // hierarchy iter
 HierarchyIter::HierarchyIter(const Hierarchy *hierarchy)
 {
