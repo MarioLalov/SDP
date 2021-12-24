@@ -13,7 +13,8 @@ int main()
     //create->fire("tosho");
     //Person *found = getPerson("ceco", iter);
 
-    std::cout << create->getSalary("pesho");
+    //std::cout << "Longest: " << create->longest_chain();
+    std::cout << create->print();
 
     // delete create;
     // delete iter;

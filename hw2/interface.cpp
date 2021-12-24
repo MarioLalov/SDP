@@ -74,7 +74,7 @@ void Hierarchy::count(Person *cur)
 }
 
 // hierarchy
-Hierarchy *getSubtree(Person *head)
+Hierarchy *Hierarchy::getSubtree(Person *head) const
 {
     return new Hierarchy(head);
 }
@@ -83,6 +83,8 @@ Hierarchy::Hierarchy(Person *head)
 {
     head_manager = head;
     count(head);
+
+    iterator = new HierarchyIter(this);
 }
 
 Hierarchy::Hierarchy(const string &data)
@@ -130,16 +132,24 @@ Hierarchy::Hierarchy(const string &data)
     }
 
     delete iter;
+
+    iterator = new HierarchyIter(this);
 }
 
 HierarchyIter *Hierarchy::iter() const
 {
-    return new HierarchyIter(this);
+    if (!iterator)
+    {
+        throw std::invalid_argument("No iterator found!");
+    }
+
+    return iterator;
 }
 
 bool Hierarchy::find(const string &name) const
 {
     HierarchyIter *iter = this->iter();
+    iter->begin();
 
     return getPerson(name, iter);
 }
@@ -147,7 +157,8 @@ bool Hierarchy::find(const string &name) const
 string Hierarchy::manager(const string &name) const
 {
     // TODO: throw
-    HierarchyIter *iter = new HierarchyIter(this);
+    HierarchyIter *iter = this->iter();
+    iter->begin();
 
     return getPerson(name, iter, PARENT)->getName();
 }
@@ -155,7 +166,9 @@ string Hierarchy::manager(const string &name) const
 int Hierarchy::num_subordinates(const string &name) const
 {
     // TODO: return negative if nullptr
-    HierarchyIter *iter = new HierarchyIter(this);
+    HierarchyIter *iter = this->iter();
+    iter->begin();
+
     Hierarchy subtree(getPerson(name, iter));
 
     return subtree.num_employees();
@@ -168,16 +181,19 @@ int Hierarchy::num_employees() const
 
 unsigned long Hierarchy::getSalary(const string &who) const
 {
-    HierarchyIter *iter = new HierarchyIter(this);
+    HierarchyIter *iter = this->iter();
+    iter->begin();
+
     unsigned int direct_subordinates = getPerson(who, iter)->subordinatesNumber();
     unsigned int indirect_subordinates = num_subordinates(who) - direct_subordinates;
 
-    return 500*direct_subordinates + 50*indirect_subordinates;
+    return 500 * direct_subordinates + 50 * indirect_subordinates;
 }
 
 bool Hierarchy::hire(const string &who, const string &boss)
 {
-    HierarchyIter *iter = new HierarchyIter(this);
+    HierarchyIter *iter = this->iter();
+    iter->begin();
 
     Person *p = getPerson(boss, iter);
 
@@ -186,12 +202,17 @@ bool Hierarchy::hire(const string &who, const string &boss)
 
     new Person(who, p);
 
+    // update iterator
+    delete iterator;
+    iterator = new HierarchyIter(this);
+
     return true;
 }
 
 bool Hierarchy::fire(const string &who)
 {
-    HierarchyIter *iter = new HierarchyIter(this);
+    HierarchyIter *iter = this->iter();
+    iter->begin();
 
     Person *boss = getPerson(who, iter, PARENT);
     Person *cur = getPerson(who, iter);
@@ -205,20 +226,130 @@ bool Hierarchy::fire(const string &who)
     }
 
     delete cur;
+
+    // update iterator
+    delete iterator;
+    iterator = new HierarchyIter(this);
 }
 
-// not yet implemented
+void Hierarchy::help(int level, Person *cur, int &count) const
+{
+    if (getSubtree(cur)->num_employees() > level)
+    {
+        count++;
+    }
+
+    std::vector<Person *> subordinates = cur->getSubordinates();
+
+    for (std::size_t i = 0; i < subordinates.size(); i++)
+    {
+        help(level, subordinates[i], count);
+    }
+}
+
+int Hierarchy::num_overloaded(int level) const
+{
+    int count = 0;
+    help(level, head_manager, count);
+
+    return count;
+}
+
+int Hierarchy::calculateLongest(Person *cur) const
+{
+    if (cur->subordinatesNumber() == 0)
+    {
+        return 1;
+    }
+
+    int longest = 0;
+
+    std::vector<Person *> subordinates = cur->getSubordinates();
+
+    for (std::size_t i = 0; i < subordinates.size(); i++)
+    {
+        int current = calculateLongest(subordinates[i]);
+
+        if (current + 1 > longest)
+        {
+            longest = current + 1;
+        }
+    }
+
+    return longest;
+}
+
+int Hierarchy::longest_chain() const
+{
+    return calculateLongest(head_manager);
+}
+
+void Hierarchy::printHelp(HierarchyIter *iter, std::string &output) const
+{
+    try
+    {
+        output += iter->parent()->getName() + "-" + iter->current()->getName() + "\n";
+    }
+    catch (const std::invalid_argument &err)
+    {
+    }
+
+    try
+    {
+        // check first child subtree if such exists
+        iter->firstChild();
+
+        return printHelp(iter, output);
+    }
+    catch (const std::invalid_argument &err)
+    {
+        try
+        {
+            iter->nextSibiling();
+
+            return printHelp(iter, output);
+        }
+        catch (const std::invalid_argument &err)
+        {
+            return;
+        }
+    }
+}
+
+std::string Hierarchy::print() const
+{
+    HierarchyIter *iter = this->iter();
+    iter->begin();
+    std::string output;
+
+    printHelp(iter, output);
+
+    return output;
+}
+
+// not fully implemented
 Hierarchy::~Hierarchy()
 {
+    delete iterator;
     std::cout << "destruct" << std::endl;
 }
+
 // hierarchy iter
 HierarchyIter::HierarchyIter(const Hierarchy *hierarchy)
 {
     previous = nullptr;
     cur = hierarchy->head_manager;
+    root = hierarchy->head_manager;
 
     LOG std::cout << "Loading person: " << (cur ? cur->name : "none") << std::endl;
+}
+
+Person *HierarchyIter::begin()
+{
+    previous = nullptr;
+    cur = root;
+
+    return cur;
 }
 
 Person *HierarchyIter::current()
@@ -276,7 +407,7 @@ Person *HierarchyIter::parent()
 // helpers
 Person *getPerson(const std::string &name, HierarchyIter *iter, unsigned int flag)
 {
-    // preoredr traverse
+    // preorder traverse
     if (iter->current()->getName() == name)
     {
         if (flag == PARENT)
