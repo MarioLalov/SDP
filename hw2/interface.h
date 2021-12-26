@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <queue>
 
 using std::string;
 
@@ -58,20 +59,25 @@ public:
     bool hire(const string &who, const string &boss); // done
 
     void incorporate(); // done
-    void modernize();
+    void modernize(); //done
 
     Hierarchy join(const Hierarchy &right) const;//done
 
     // If you need it - add more public methods here
     Hierarchy(Person *head);
     HierarchyIter *iter() const;
+    
     void promote(Person *who, Person *boss, Person *old_hierarchy_boss);
+    void demote(Person *who, Person *boss);
+    
     void getForPromotion(std::vector<Person *> &to_be_promoted, std::vector<Person *> &bosses, Person *current);
     Person *getHighestSalary(const std::vector<Person *> &people);
     Person *getPerson(const string &name, Person *current) const;
     void joinHelp(Person *left, const Hierarchy &h_right, Hierarchy &new_hierachy) const;
     void addFromRight(Person *p_right, const Hierarchy &l_hierarchy, Hierarchy &new_hierachy) const;
+    unsigned int height(Person* current) const;
 
+//Person *head_manager = nullptr;
 private:
     Person *head_manager = nullptr;
     std::size_t total_employees = 0;
@@ -108,3 +114,4 @@ public:
 // helpers
 std::string getSubstring(const std::string &str, std::size_t cur_pos, char stmbl);
 Person *getPerson(const std::string &name, HierarchyIter *iter, unsigned int flag = 0);
+std::queue<Person*> onLevel(Person *head, int cur_level);

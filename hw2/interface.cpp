@@ -532,6 +532,62 @@ unsigned int getLevel(Person *current, int cur_level, std::string name)
     return 0;
 }
 
+std::queue<Person *> onLevel(Person *head, int cur_level)
+{
+    std::size_t level = 0;
+    // queue to store elements of on current level
+    std::queue<Person *> queue;
+    queue.push(head);
+
+    while (!queue.empty())
+    {
+        // get the number of nodes on the current row
+        int nodeCount = queue.size();
+
+        while (nodeCount > 0)
+        {
+
+            // add to string
+            Person *current = queue.front();
+            queue.pop();
+
+            // add the nodes of the next row
+            for (std::size_t i = 0; i < current->getSubordinates().size(); i++)
+            {
+                queue.push(current->getSubordinates()[i]);
+            }
+
+            nodeCount--;
+        }
+
+        level++;
+
+        if (level == cur_level)
+        {
+            return queue;
+        }
+    }
+}
+
+unsigned int Hierarchy::height(Person *current) const
+{
+    /* compute the depth of each subtree */
+    unsigned int total = 0;
+
+    std::vector<Person *> subordinates = current->getSubordinates();
+    for (std::size_t i = 0; i < subordinates.size(); i++)
+    {
+        unsigned int returned = height(subordinates[i]);
+
+        if(total < returned)
+        {
+            total = returned;
+        }
+    }
+
+    return total + 1;
+}
+
 void Hierarchy::addFromRight(Person *p_right, const Hierarchy &l_hierarchy, Hierarchy &new_hierachy) const
 {
     // add if person is only in the right hierarchy
@@ -600,6 +656,41 @@ Hierarchy Hierarchy::join(const Hierarchy &right) const
     return new_hierarchy;
 }
 
+void Hierarchy::demote(Person *who, Person *boss)
+{
+    std::vector<Person*> subordinates = who->getSubordinates();
+    for(std::size_t i = 0; i < subordinates.size(); i++)
+    {
+        boss->addSubordinate(subordinates[i]);
+        who->removeSubordinate(subordinates[i]->getName());
+    }
+}
+
+void Hierarchy::modernize()
+{
+    //levels from root
+    int level = height(head_manager);
+
+    level = (level%2 == 0) ? level-1 : level;
+
+    std::cout << "at level: " << level;
+    
+    std::queue<Person*> current;
+
+    while(level > 0)
+    {
+        std::cout << level << std::endl;
+        current = onLevel(head_manager, level);
+        
+        while(!current.empty())
+        {
+            demote(current.front(), current.front()->getParent());
+            current.pop();
+        }
+
+        level -= 2;
+    }
+}
 // not fully implemented
 Hierarchy::~Hierarchy()
 {
