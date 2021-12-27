@@ -67,7 +67,8 @@ public:
     Hierarchy(Person *head);
     HierarchyIter *iter() const;
     
-    void promote(Person *who, Person *boss, Person *old_hierarchy_boss);
+    //void promote(Person *who, Person *boss, Person *old_hierarchy_boss);
+    void promote(Person *who, Person *boss);
     void demote(Person *who, Person *boss);
     
     void getForPromotion(std::vector<Person *> &to_be_promoted, std::vector<Person *> &bosses, Person *current);
@@ -76,6 +77,9 @@ public:
     void joinHelp(Person *left, const Hierarchy &h_right, Hierarchy &new_hierachy) const;
     void addFromRight(Person *p_right, const Hierarchy &l_hierarchy, Hierarchy &new_hierachy) const;
     unsigned int height(Person* current) const;
+    int num_all_subordinates(const string &name) const;
+
+    void promoteRow(std::queue<Person*>& row);
 
 //Person *head_manager = nullptr;
 private:

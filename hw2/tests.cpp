@@ -45,7 +45,7 @@ TEST_CASE("Create and save hierarchy") {
         REQUIRE(h.print() == "");
     }
 
-    SECTION("One pair") {
+   SECTION("One pair") {
         const string only_one = "Uspeshnia-Pesho\n";
         
         Hierarchy h(only_one);
@@ -67,7 +67,7 @@ TEST_CASE("Create and save hierarchy") {
     SECTION("Loz new") {
         const string loz_print = "Uspeshnia-MishoPetrov\nMishoPetrov-Misho\nMishoPetrov-Slav\n";
 
-        Hierarchy h(loz_new);
+        Hierarchy h(loz_print);
         REQUIRE(h.num_employees() == 4);
 
         REQUIRE(h.find(TheBoss));
@@ -94,7 +94,6 @@ TEST_CASE("Create and save hierarchy") {
         REQUIRE_THROWS(create(no_parent));
     }
 }
-
 
 TEST_CASE("Simple selectors") {
     Hierarchy loz(lozenec);
@@ -143,7 +142,6 @@ TEST_CASE("Simple selectors") {
     }
 }
 
-
 TEST_CASE("Overloaded") {
     Hierarchy h (large);
     Hierarchy loz(lozenec);
@@ -188,13 +186,11 @@ TEST_CASE("Fire") {
     REQUIRE(!loz.fire(TheBoss));
 }
 
-
 TEST_CASE("Hire") {
     Hierarchy loz(loz_new);
     CHECK(!loz.find("Ico_Petrov"));
     CHECK(loz.num_employees() == 4);
     CHECK(loz.num_subordinates("MishoPetrov") == 2);
-    
     
     REQUIRE(loz.hire("Ico_Petrov", "MishoPetrov"));
 
@@ -215,7 +211,6 @@ TEST_CASE("Hire") {
     REQUIRE(!loz.hire("Ico_Petrov", "BadName"));
     REQUIRE(!loz.hire("Ico", "BadName"));
 }
-
 
 TEST_CASE("Incorporate") {
     Hierarchy loz(lozenec);
@@ -254,7 +249,6 @@ TEST_CASE("Incorporate") {
     REQUIRE(h.num_subordinates("21") == 7);
     REQUIRE(h.num_subordinates("3") == 6);
 }
-
 
 TEST_CASE("Modernize") {
     Hierarchy loz(lozenec);
@@ -314,4 +308,3 @@ TEST_CASE("Join") {
     REQUIRE(joined2.num_subordinates(TheBoss) == 4);
     REQUIRE(joined2.num_overloaded() == 2);
 }
-
