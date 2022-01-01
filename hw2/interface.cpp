@@ -70,7 +70,7 @@ Person::~Person()
 
 // Hierarchy
 
-void Hierarchy::count(Person *cur)
+void Hierarchy::count(Person *cur, unsigned int &employees) const
 {
     if (cur->subordinatesNumber() == 0)
     {
@@ -81,21 +81,17 @@ void Hierarchy::count(Person *cur)
     std::vector<Person *> subordinates = cur->getSubordinates();
     for (std::size_t i = 0; i < subordinates.size(); i++)
     {
-        total_employees++;
-
-        count(subordinates[i]);
+        employees++;
+        count(subordinates[i], employees);
     }
 }
 
-Hierarchy *Hierarchy::getSubtree(Person *head) const
+unsigned int Hierarchy::getSubtreeEmplyees(Person *head) const
 {
-    if (head)
-    {
-        manage.alloc();
-        return new Hierarchy(head);
-    }
+    unsigned int employees = 0;
+    count(head, employees);
 
-    return nullptr;
+    return employees;
 }
 
 void Hierarchy::traverse(const Person *current_r)
@@ -104,12 +100,10 @@ void Hierarchy::traverse(const Person *current_r)
     if (current_r->getParent())
     {
         new Person(current_r->getName(), getPerson(current_r->getParent()->getName(), head_manager));
-        manage.alloc();
     }
     else
     {
         head_manager = new Person(current_r->getName(), nullptr);
-        manage.alloc();
     }
 
     std::vector<Person *> subordinates = current_r->getSubordinates();
@@ -130,18 +124,20 @@ Hierarchy::Hierarchy(Hierarchy &&r) noexcept
 
 Hierarchy::Hierarchy(const Hierarchy &r)
 {
-    // deep copy all elements
+    // copy all elements
     traverse(r.head_manager);
     total_employees = r.total_employees;
 }
 
 Hierarchy::Hierarchy(Person *head)
 {
-    // set head and count the total subordinates of head
+    // set head and count all subordinates of head
     head_manager = head;
-    total_employees = 1;
+    unsigned int cnt = 0;
 
-    count(head);
+    count(head, cnt);
+
+    total_employees = 1 + cnt;
 }
 
 Hierarchy::Hierarchy(const string &data)
@@ -153,6 +149,12 @@ Hierarchy::Hierarchy(const string &data)
         std::string boss_name = getSubstring(data, i, '-');
         if (boss_name == "")
         {
+            // remove object
+            if (head_manager)
+            {
+                delete head_manager;
+            }
+
             throw std::invalid_argument("No boss name!");
         }
 
@@ -161,7 +163,13 @@ Hierarchy::Hierarchy(const string &data)
         std::string subordinate_name = getSubstring(data, i, '\n');
         if (subordinate_name == "")
         {
-            throw std::invalid_argument("No subordinate name");
+            // remove object
+            if (head_manager)
+            {
+                delete head_manager;
+            }
+
+            throw std::invalid_argument("No subordinate name!");
         }
 
         i += subordinate_name.size();
@@ -174,9 +182,7 @@ Hierarchy::Hierarchy(const string &data)
         {
             // set head manager and his first subordinate
             head_manager = new Person(boss_name, nullptr);
-            manage.alloc();
             new Person(subordinate_name, head_manager);
-            manage.alloc();
 
             total_employees += 2;
 
@@ -186,7 +192,6 @@ Hierarchy::Hierarchy(const string &data)
         {
             // add next subordinate
             new Person(subordinate_name, this->getPerson(boss_name, head_manager));
-            manage.alloc();
             total_employees++;
         }
     }
@@ -194,9 +199,9 @@ Hierarchy::Hierarchy(const string &data)
 
 bool Hierarchy::find(const string &name) const
 {
-    Person *returned = this->getPerson(name, head_manager);
+    // Person *returned = this->getPerson(name, head_manager);
 
-    return returned ? true : false;
+    return this->getPerson(name, head_manager) ? true : false;
 }
 
 std::string Hierarchy::manager(const string &name) const
@@ -221,13 +226,7 @@ int Hierarchy::num_subordinates(const string &name) const
 
 int Hierarchy::num_all_subordinates(const string &name) const
 {
-    // Hierarchy subtree(Hierarchy (getPerson(name, head_manager)));
-    Hierarchy *subtree = getSubtree(getPerson(name, head_manager));
-
-    int number = subtree->num_employees();
-
-    // get all employees from the subtree except for the head manager
-    return number - 1;
+    return getSubtreeEmplyees(getPerson(name, head_manager));
 }
 
 int Hierarchy::num_employees() const
@@ -280,7 +279,6 @@ bool Hierarchy::hire(const string &who, const string &boss)
         return false;
 
     new Person(who, p);
-    manage.alloc();
     total_employees++;
 
     return true;
@@ -288,7 +286,7 @@ bool Hierarchy::hire(const string &who, const string &boss)
 
 bool Hierarchy::fire(const string &who)
 {
-    // check wether the input person is the head manager
+    // check whether the input person is the head manager
     if (head_manager->getName() == who)
     {
         return false;
@@ -309,11 +307,11 @@ bool Hierarchy::fire(const string &who)
 
     for (std::size_t i = 0; i < cur_subordinates.size(); i++)
     {
+        cur->removeSubordinate(cur_subordinates[i]->getName());
         boss->addSubordinate(cur_subordinates[i]);
     }
 
     delete cur;
-    manage.dealloc();
     total_employees--;
 
     return true;
@@ -322,7 +320,7 @@ bool Hierarchy::fire(const string &who)
 void Hierarchy::help_overloaded(int level, Person *cur, int &count) const
 {
     // count overloaded
-    if (getSubtree(cur)->num_employees() > level)
+    if (getSubtreeEmplyees(cur) > level)
     {
         count++;
     }
@@ -357,7 +355,6 @@ int Hierarchy::calculateLongest(Person *cur) const
     int longest = 0;
 
     std::vector<Person *> subordinates = cur->getSubordinates();
-
     for (std::size_t i = 0; i < subordinates.size(); i++)
     {
         int current = calculateLongest(subordinates[i]);
@@ -388,7 +385,7 @@ Person *Hierarchy::getPerson(const string &name, Person *current) const
 
     for (std::size_t i = 0; i < subordinates.size(); i++)
     {
-        // check if person was found in subtree
+        // check if person was found in a subtree
         Person *returned = getPerson(name, subordinates[i]);
         if (returned)
         {
@@ -414,7 +411,7 @@ void printLevelOrder(Person *head, std::string &output)
     if (head == nullptr)
         return;
 
-    // queue to store elements of on current level
+    // queue to store the elements on the current level
     std::queue<Person *> queue;
     queue.push(head);
 
@@ -477,12 +474,20 @@ Person *Hierarchy::getHighestSalary(const std::vector<Person *> &people)
     {
         std::string name = people[i]->getName();
         int current = this->getSalary(people[i]->getName());
+
         if (highest < current)
         {
             highest = current;
             index = i;
         }
-        // todo add for equal salaries
+        else if(highest == current)
+        {
+            //compare names
+            if(people[index]->getName() > people[i]->getName())
+            {
+                index = i;
+            }
+        }
     }
 
     return people[index];
@@ -622,7 +627,6 @@ void Hierarchy::joinHelp(Person *p_left, const Hierarchy &h_right, Hierarchy &ne
 Hierarchy Hierarchy::join(const Hierarchy &right) const
 {
     Hierarchy new_hierarchy(new Person(head_manager->getName(), nullptr));
-    manage.alloc();
     addFromRight(right.head_manager, *this, new_hierarchy);
     joinHelp(this->head_manager, right, new_hierarchy);
 
@@ -650,14 +654,14 @@ void Hierarchy::modernize()
 
     std::queue<Person *> current;
 
-    // iterate for each odd level from root
+    // iterate for each odd level
     while (level > 1)
     {
         current = onLevel(head_manager, level);
 
         while (!current.empty())
         {
-            // demote only if current is team leader
+            // demote only if the current person is a team leader
             if (current.front()->subordinatesNumber() > 0)
             {
                 demote(current.front(), current.front()->getParent());
@@ -670,28 +674,12 @@ void Hierarchy::modernize()
     }
 }
 
-void Hierarchy::remove(Person *head)
-{
-    std::vector<Person *> subordinates = head->getSubordinates();
-    for (std::size_t i = 0; i < subordinates.size(); i++)
-    {
-        remove(subordinates[i]);
-    }
-
-    if (head->subordinatesNumber() == 0 && head->getParent())
-    {
-        this->fire(head->getName());
-    }
-}
-
 Hierarchy::~Hierarchy()
 {
     if (head_manager)
     {
-        // remove(head_manager);
         delete head_manager;
     }
-    std::cout << "destruct" << std::endl;
 }
 
 // helpers

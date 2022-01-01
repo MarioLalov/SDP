@@ -82,19 +82,34 @@ void Commands::save(std::string hierarchy_name, std::string file_name)
 
 void Commands::find(std::string hierarchy_name, std::string person_name)
 {
-    // todo throw
     Hierarchy *current = getHierarchy(hierarchy_name);
     if (!current)
         throw std::invalid_argument("No such hierarchy!");
 
     std::cout << person_name << (current->find(person_name) ? " is " : " isn't ")
-              << "emplyed in " << hierarchy_name << std::endl;
+              << "employed in " << hierarchy_name << std::endl;
 }
 
-/*void Commands::help()
+void Commands::help()
 {
-   // std::cout << menu;
-}*/
+    std::cout << "Commands: " << std::endl
+              << ">load hierarchy_name file_name -- load hierarchy from file" << std::endl
+              << ">load hierarchy_name -- load hierarchy from input" << std::endl
+              << ">save hierarchy_name file_name -- save hierarchy to file" << std::endl
+              << ">save hierarchy_name file_name -- output hierarchy" << std::endl
+              << ">find hierarchy_name person_name -- check if person exists in a certain hierarchy" << std::endl
+              << ">num_subordinates hierarchy_name person_name -- get the number of subordinates" << std::endl
+              << ">manage hierarchy_name person_name -- get the person's manager" << std::endl
+              << ">num_employees hierarchy_name -- get the number of employees" << std::endl
+              << ">overloaded hierarchy_name -- get the number of overloaded employees" << std::endl
+              << ">join first_hierarchy_name second_hierarchy_name -- join two hierarchies" << std::endl
+              << ">fire hierarchy_name person_name -- fire person" << std::endl
+              << ">hire hierarchy_name person_name -- hire person" << std::endl
+              << ">salary hierarchy_name person_name -- get the salary of a person" << std::endl
+              << ">incorporate hierarchy_name -- incorporate hierarchy" << std::endl
+              << ">modernize hierarchy_name -- modernize hierarchy" << std::endl
+              << ">exit -- exit program" << std::endl;
+}
 
 void Commands::num_subordinates(std::string hierarchy_name, std::string person_name)
 {
@@ -120,7 +135,6 @@ void Commands::manager(std::string hierarchy_name, std::string person_name)
     if (!current)
         throw std::invalid_argument("No such hierarchy!");
 
-    // to do check for head manager
     std::cout << "The manager of " << person_name << " is " << current->manager(person_name) << std::endl;
 }
 
@@ -182,9 +196,7 @@ void Commands::fire(std::string hierarchy_name, std::string person_name)
     if (!current)
         throw std::invalid_argument("No such hierarchy!");
 
-    current->fire(person_name);
-
-    std::cout << person_name << " was fired." << std::endl;
+    std::cout << person_name << (current->fire(person_name) ? " was fired." : " couldn't be fired!") << std::endl;
 }
 
 void Commands::salary(std::string hierarchy_name, std::string person_name)
@@ -268,7 +280,7 @@ void Commands::initiateCommand(std::string fullCommand, bool &end)
 
     if (command == "HELP" && params.size() == 0)
     {
-        // help();
+        help();
     }
     else if (command == "LOAD" && (params.size() == 1 || params.size() == 2))
     {

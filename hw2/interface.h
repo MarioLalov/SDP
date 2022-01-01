@@ -5,31 +5,6 @@
 
 using std::string;
 
-const unsigned int PARENT = 1;
-
-struct Memory_manager
-{
-    int allocations = 0;
-    int deallocations = 0;
-
-    void alloc()
-    {
-        allocations++;
-    }
-
-    void dealloc()
-    {
-        deallocations++;
-    }
-
-    int misses()
-    {
-        return allocations - deallocations;
-    }
-};
-
-Memory_manager manage;
-
 class Person
 {
 private:
@@ -55,31 +30,31 @@ class Hierarchy
 {
 public:
     Hierarchy(Hierarchy &&r) noexcept;
-    Hierarchy(const Hierarchy &r); // done
-    Hierarchy(const string &data); // done
-    ~Hierarchy() noexcept;         // in deveopment
+    Hierarchy(const Hierarchy &r);
+    Hierarchy(const string &data);
+    ~Hierarchy() noexcept;         
     void operator=(const Hierarchy &) = delete;
 
-    string print() const; // done
+    string print() const; 
 
-    int longest_chain() const;                // done
-    bool find(const string &name) const;      // done
-    int num_employees() const;                // done
-    int num_overloaded(int level = 20) const; // done
+    int longest_chain() const;                
+    bool find(const string &name) const;      
+    int num_employees() const;                
+    int num_overloaded(int level = 20) const; 
 
-    string manager(const string &name) const;         // done
-    int num_subordinates(const string &name) const;   // done
-    unsigned long getSalary(const string &who) const; // done
+    string manager(const string &name) const;         
+    int num_subordinates(const string &name) const;   
+    unsigned long getSalary(const string &who) const; 
 
-    bool fire(const string &who);                     // done
-    bool hire(const string &who, const string &boss); // done
+    bool fire(const string &who);                     
+    bool hire(const string &who, const string &boss); 
 
-    void incorporate(); // done
-    void modernize();   // done
+    void incorporate(); 
+    void modernize();   
 
-    Hierarchy join(const Hierarchy &right) const; // done
+    Hierarchy join(const Hierarchy &right) const;
 
-    // subtree constructor
+    // add head manager only
     Hierarchy(Person *head);
 
     // promotion and demotion of people
@@ -115,7 +90,7 @@ private:
     void traverse(const Person *current);
 
     //count people in hierarchy
-    void count(Person *cur);
+    void count(Person *cur, unsigned int& employees) const;
 
     //helper for num_overloaded()
     void help_overloaded(int level, Person *cur, int &count) const;
@@ -124,10 +99,7 @@ private:
     int calculateLongest(Person *cur) const;
 
     //returns subtree with head as root
-    Hierarchy *getSubtree(Person *head) const;
-
-    //deletes hierarchy
-    void remove(Person* head);
+    unsigned int getSubtreeEmplyees(Person* head) const;
 };
 
 // helpers

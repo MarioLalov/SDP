@@ -8,8 +8,6 @@
 #include <iostream>
 #include "interface.h"
 
-//const std::string menu = "";
-
 class Commands
 {
 
@@ -19,7 +17,7 @@ private:
 
 public:
 static Hierarchy* getHierarchy(std::string& name);
-    //static void help();
+    static void help();
     static void load(std::string hierarchy_name, std::string file_name = "");
     static void save(std::string hierarchy_name, std::string file_name = "");
     static void find(std::string hierarchy_name, std::string person_name);
