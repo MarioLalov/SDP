@@ -3,6 +3,7 @@
 
 std::vector<Hierarchy *> Commands::hierarchies;
 std::vector<std::string> Commands::names;
+std::vector<bool> Commands::saved;
 
 Hierarchy *Commands::getHierarchy(std::string &name)
 {
@@ -15,6 +16,17 @@ Hierarchy *Commands::getHierarchy(std::string &name)
     }
 
     return nullptr;
+}
+
+void Commands::change(std::string &hierarchy_name, bool save)
+{
+    for (std::size_t i = 0; i < saved.size(); i++)
+    {
+        if (hierarchy_name == names[i])
+        {
+            saved[i] = save ? true : false;
+        }
+    }
 }
 
 void Commands::load(std::string hierarchy_name, std::string file_name)
@@ -32,26 +44,28 @@ void Commands::load(std::string hierarchy_name, std::string file_name)
 
         hierarchies.push_back(new Hierarchy(str));
         names.push_back(hierarchy_name);
+        saved.push_back(false);
     }
     else
     {
         std::string str;
         std::string cur = " ";
 
-        while (cur != "")
+        do
         {
             std::getline(std::cin, cur);
 
-            if (cur == "")
+            if (cur == "^Z" || cur == "^D")
             {
                 break;
             }
-
             str += cur + '\n';
-        }
+
+        } while (cur != "^Z" && cur != "^D");
 
         hierarchies.push_back(new Hierarchy(str));
         names.push_back(hierarchy_name);
+        saved.push_back(false);
     }
 }
 
@@ -70,6 +84,8 @@ void Commands::save(std::string hierarchy_name, std::string file_name)
             file << current->print();
 
         file.close();
+        // mark as saved
+        change(hierarchy_name, true);
     }
     else
     {
@@ -173,6 +189,7 @@ void Commands::join(std::string hierarchy1_name, std::string hierarchy2_name, st
     Hierarchy *result = new Hierarchy(h1->join(*h2));
     hierarchies.push_back(result);
     names.push_back(hierarchy_result_name);
+    saved.push_back(false);
 
     std::cout << hierarchy_result_name << " created." << std::endl;
 }
@@ -187,6 +204,8 @@ void Commands::hire(std::string hierarchy_name, std::string person_name, std::st
     current->hire(person_name, boss_name);
 
     std::cout << person_name << " was hired." << std::endl;
+    // mark changes
+    change(hierarchy_name, false);
 }
 
 void Commands::fire(std::string hierarchy_name, std::string person_name)
@@ -197,6 +216,8 @@ void Commands::fire(std::string hierarchy_name, std::string person_name)
         throw std::invalid_argument("No such hierarchy!");
 
     std::cout << person_name << (current->fire(person_name) ? " was fired." : " couldn't be fired!") << std::endl;
+    // mark changes
+    change(hierarchy_name, false);
 }
 
 void Commands::salary(std::string hierarchy_name, std::string person_name)
@@ -219,6 +240,8 @@ void Commands::incorporate(std::string hierarchy_name)
     current->incorporate();
 
     std::cout << hierarchy_name << " was incorporated." << std::endl;
+    // mark changes
+    change(hierarchy_name, false);
 }
 
 void Commands::modernize(std::string hierarchy_name)
@@ -231,6 +254,53 @@ void Commands::modernize(std::string hierarchy_name)
     current->modernize();
 
     std::cout << hierarchy_name << " was modernized." << std::endl;
+    // mark changes
+    change(hierarchy_name, false);
+}
+
+void Commands::exit(bool &end)
+{
+    std::size_t unsaved_num = 0;
+    std::vector<std::string> unsaved_names;
+
+    for (std::size_t i = 0; i < saved.size(); i++)
+    {
+        if (!saved[i])
+        {
+            unsaved_names.push_back(names[i]);
+            unsaved_num++;
+        }
+    }
+
+    if (unsaved_num > 0)
+    {
+        std::cout << "You have " << unsaved_num << " unsaved hierarchies." << std::endl
+                  << "Namely: " << std::endl;
+        for (std::size_t i = 0; i < unsaved_names.size(); i++)
+        {
+            std::cout << unsaved_names[i] << std::endl;
+        }
+
+        std::string input;
+
+        std::cout << "Do you wish to save them?(Y/N): ";
+        std::getline(std::cin, input);
+        toUpper(input);
+
+        if (input == "Y")
+        {
+            std::cout << "Please save your changes using: >save hierarchy_name file_name -- save hierarchy to file" << std::endl;
+            return;
+        }
+    }
+
+    for (std::size_t i = 0; i < hierarchies.size(); i++)
+    {
+        delete hierarchies[i];
+    }
+
+    end = true;
+    std::cout << "Exiting..." << std::endl;
 }
 
 void Commands::initiateCommand(std::string fullCommand, bool &end)
@@ -350,7 +420,7 @@ void Commands::initiateCommand(std::string fullCommand, bool &end)
     }
     else if (command == "EXIT")
     {
-        end = true;
+        exit(end);
     }
     else
     {

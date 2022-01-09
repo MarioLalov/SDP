@@ -62,6 +62,7 @@ void Person::removeSubordinate(const std::string &who)
 
 Person::~Person()
 {
+    // delete all subordinates
     for (std::size_t i = 0; i < subordinates.size(); i++)
     {
         delete subordinates[i];
@@ -96,7 +97,7 @@ unsigned int Hierarchy::getSubtreeEmplyees(Person *head) const
 
 void Hierarchy::traverse(const Person *current_r)
 {
-    // traverse hierarchy
+    // traverse hierarchy and copy values
     if (current_r->getParent())
     {
         new Person(current_r->getName(), getPerson(current_r->getParent()->getName(), head_manager));
@@ -136,7 +137,6 @@ Hierarchy::Hierarchy(Person *head)
     unsigned int cnt = 0;
 
     count(head, cnt);
-
     total_employees = 1 + cnt;
 }
 
@@ -199,8 +199,6 @@ Hierarchy::Hierarchy(const string &data)
 
 bool Hierarchy::find(const string &name) const
 {
-    // Person *returned = this->getPerson(name, head_manager);
-
     return this->getPerson(name, head_manager) ? true : false;
 }
 
@@ -470,6 +468,7 @@ Person *Hierarchy::getHighestSalary(const std::vector<Person *> &people)
     int highest = 0;
     std::size_t index = 0;
 
+    // compare salaries
     for (std::size_t i = 0; i < people.size(); i++)
     {
         std::string name = people[i]->getName();
@@ -480,10 +479,10 @@ Person *Hierarchy::getHighestSalary(const std::vector<Person *> &people)
             highest = current;
             index = i;
         }
-        else if(highest == current)
+        else if (highest == current)
         {
-            //compare names
-            if(people[index]->getName() > people[i]->getName())
+            // compare names if the salaries are equal
+            if (people[index]->getName() > people[i]->getName())
             {
                 index = i;
             }
@@ -495,6 +494,7 @@ Person *Hierarchy::getHighestSalary(const std::vector<Person *> &people)
 
 void Hierarchy::promoteRow(std::queue<Person *> &row)
 {
+    // promote all people that match the conditions for promotion
     while (!row.empty())
     {
         Person *current = row.front();
@@ -512,7 +512,7 @@ void Hierarchy::incorporate()
 {
     std::size_t level = height(head_manager);
 
-    // iterate for each hierarchy row
+    // call promoteRow() for each hierarchy row
     while (level > 0)
     {
         std::queue<Person *> queue = onLevel(head_manager, level);
@@ -565,7 +565,7 @@ unsigned int Hierarchy::height(Person *current) const
 
 void Hierarchy::addFromRight(Person *p_right, const Hierarchy &l_hierarchy, Hierarchy &new_hierachy) const
 {
-    // add if person is only present in the right hierarchy
+    // add if the current person is present in the right hierarchy only
     if (!l_hierarchy.getPerson(p_right->getName(), l_hierarchy.head_manager))
     {
         new_hierachy.hire(p_right->getName(), p_right->getParent()->getName());
@@ -587,7 +587,7 @@ void Hierarchy::joinHelp(Person *p_left, const Hierarchy &h_right, Hierarchy &ne
         // check if boss is the same
         if (p_left->getParent()->getName() != p_right->getParent()->getName())
         {
-            // chose the boss on the higher position
+            // choose the boss on a higher position
             unsigned int left = getLevel(head_manager, 0, p_left->getParent()->getName());
             unsigned int right = getLevel(h_right.head_manager, 0, p_right->getParent()->getName());
 
@@ -601,7 +601,7 @@ void Hierarchy::joinHelp(Person *p_left, const Hierarchy &h_right, Hierarchy &ne
             }
             else
             {
-                // compare
+                // compare names
                 (p_left->getParent()->getName() > p_right->getParent()->getName())
                     ? new_hierachy.hire(p_right->getName(), p_right->getParent()->getName())
                     : new_hierachy.hire(p_left->getName(), p_left->getParent()->getName());
@@ -702,7 +702,7 @@ std::queue<Person *> onLevel(Person *head, int cur_level)
 {
     std::size_t level = 1;
 
-    // queue to store elements of on current level
+    // queue to store elements on current level
     std::queue<Person *> queue;
     queue.push(head);
 
@@ -721,7 +721,7 @@ std::queue<Person *> onLevel(Person *head, int cur_level)
             Person *current = queue.front();
             queue.pop();
 
-            // add the nodes of the next row
+            // add the nodes that are position on the next row
             for (std::size_t i = 0; i < current->getSubordinates().size(); i++)
             {
                 queue.push(current->getSubordinates()[i]);

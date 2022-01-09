@@ -32,25 +32,25 @@ public:
     Hierarchy(Hierarchy &&r) noexcept;
     Hierarchy(const Hierarchy &r);
     Hierarchy(const string &data);
-    ~Hierarchy() noexcept;         
+    ~Hierarchy() noexcept;
     void operator=(const Hierarchy &) = delete;
 
-    string print() const; 
+    string print() const;
 
-    int longest_chain() const;                
-    bool find(const string &name) const;      
-    int num_employees() const;                
-    int num_overloaded(int level = 20) const; 
+    int longest_chain() const;
+    bool find(const string &name) const;
+    int num_employees() const;
+    int num_overloaded(int level = 20) const;
 
-    string manager(const string &name) const;         
-    int num_subordinates(const string &name) const;   
-    unsigned long getSalary(const string &who) const; 
+    string manager(const string &name) const;
+    int num_subordinates(const string &name) const;
+    unsigned long getSalary(const string &who) const;
 
-    bool fire(const string &who);                     
-    bool hire(const string &who, const string &boss); 
+    bool fire(const string &who);
+    bool hire(const string &who, const string &boss);
 
-    void incorporate(); 
-    void modernize();   
+    void incorporate();
+    void modernize();
 
     Hierarchy join(const Hierarchy &right) const;
 
@@ -61,7 +61,7 @@ public:
     void promote(Person *who, Person *boss);
     void demote(Person *who, Person *boss);
 
-    // get highest slary from vector of people
+    // get highest salary from vector of people
     Person *getHighestSalary(const std::vector<Person *> &people);
 
     // get person by name
@@ -86,24 +86,24 @@ private:
     Person *head_manager = nullptr;
     std::size_t total_employees = 0;
 
-    //traverse tree for copy constructor
+    // traverse tree for copy constructor
     void traverse(const Person *current);
 
-    //count people in hierarchy
-    void count(Person *cur, unsigned int& employees) const;
+    // count people in hierarchy
+    void count(Person *cur, unsigned int &employees) const;
 
-    //helper for num_overloaded()
+    // helper for num_overloaded()
     void help_overloaded(int level, Person *cur, int &count) const;
 
-    //returns the longest chain
+    // returns the longest chain
     int calculateLongest(Person *cur) const;
 
-    //returns subtree with head as root
-    unsigned int getSubtreeEmplyees(Person* head) const;
+    // returns subtree with head as root
+    unsigned int getSubtreeEmplyees(Person *head) const;
 };
 
 // helpers
 std::string getSubstring(const std::string &str, std::size_t cur_pos, char stmbl);
 
-//returns all people on current level
+// returns all people on current level
 std::queue<Person *> onLevel(Person *head, int cur_level);

@@ -11,7 +11,7 @@ int main()
     {
         std::string command;
 
-        std::cout << "Enter command: ";
+        std::cout << "Enter command:";
         std::getline(std::cin, command);
 
         try

@@ -1,5 +1,4 @@
-#ifndef COMMANDS_H
-#define COMMANDS_H
+#pragma once
 
 #include <string>
 #include <vector>
@@ -12,11 +11,16 @@ class Commands
 {
 
 private:
-    static std::vector<Hierarchy* > hierarchies;
+    static std::vector<Hierarchy *> hierarchies;
     static std::vector<std::string> names;
+    static std::vector<bool> saved;
 
 public:
-static Hierarchy* getHierarchy(std::string& name);
+    // get an already created hierarchy
+    static Hierarchy *getHierarchy(std::string &name);
+    //mark changes
+    static void change(std::string& hierarchy_name, bool save);
+    // print help menu
     static void help();
     static void load(std::string hierarchy_name, std::string file_name = "");
     static void save(std::string hierarchy_name, std::string file_name = "");
@@ -31,11 +35,11 @@ static Hierarchy* getHierarchy(std::string& name);
     static void salary(std::string hierarchy_name, std::string person_name);
     static void incorporate(std::string hierarchy_name);
     static void modernize(std::string hierarchy_name);
+    static void exit(bool& end);
 
+    // execute command
     static void initiateCommand(std::string command, bool &end);
 };
 
 // helpers
 void toUpper(std::string &input); // make whole string to upper
-
-#endif
