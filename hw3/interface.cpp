@@ -8,11 +8,6 @@ void WordsMultiset::add(const std::string &word, size_t times)
     }
 
     table.addWord(word, times);
-
-    for (std::size_t i = 0; i < times; i++)
-    {
-        stored_words.push_back(word);
-    }
 }
 
 bool WordsMultiset::contains(const std::string &word) const
@@ -32,14 +27,17 @@ size_t WordsMultiset::countOfUniqueWords() const
 
 std::multiset<std::string> WordsMultiset::words() const
 {
-    std::multiset<std::string> set;
+    return table.getInMultiSet();
+}
 
-    for (auto word : stored_words)
-    {
-        set.insert(word);
-    }
+std::list<std::pair<std::string, std::size_t>> WordsMultiset::wordsList() const
+{
+    return table.getInList();
+}
 
-    return set;
+std::size_t WordsMultiset::wordsTotal() const
+{
+    return table.getTotal();
 }
 
 void Comparator::read(std::istream &stream, WordsMultiset &table)
@@ -47,18 +45,17 @@ void Comparator::read(std::istream &stream, WordsMultiset &table)
     std::string cur_word;
     cur_word.clear();
     char cur;
-    
 
     while (stream.get(cur))
     {
-        
-        if(!std::isspace(cur))
+
+        if (!std::isspace(cur))
         {
             cur_word += cur;
         }
         else
         {
-            if(!cur_word.empty())
+            if (!cur_word.empty())
             {
                 table.add(cur_word, 1);
                 cur_word.clear();
@@ -81,18 +78,51 @@ ComparisonReport Comparator::compare(std::istream &a, std::istream &b)
     WordsMultiset table_b;
     read(b, table_b);
 
-    std::multiset<std::string> set1 = table_a.words();
-    std::multiset<std::string> set2 = table_b.words();
+    // std::multiset<std::string> set1 = table_a.words();
+    // std::multiset<std::string> set2 = table_b.words();
+    std::list<std::pair<std::string, std::size_t>> list1 = table_a.wordsList();
+    std::list<std::pair<std::string, std::size_t>> list2 = table_b.wordsList();
 
     ComparisonReport report;
 
-    std::string current = "";
-    std::size_t count = 0;
+    // std::string current = "";
+    // std::size_t count = 0;
 
     // {1 1 1 2 3 4 4}
     // {2 3 4 5}
+    for (auto &el : list1)
+    {
+        std::size_t b_count = table_b.countOf(el.first);
 
-    for (std::multiset<std::string>::iterator it = set1.begin(); it != set1.end(); ++it)
+        report.commonWords.add(el.first, b_count < el.second ? b_count : el.second);
+
+        if (el.second > b_count)
+        {
+            report.uniqueWords[0].add(el.first, el.second - b_count);
+
+            // for (std::size_t i = 0; i < b_count; i++)
+            //{
+            if (b_count != 0)
+            {
+                list2.remove({el.first, b_count});
+            }
+            //}
+        }
+        else
+        {
+            report.uniqueWords[1].add(el.first, b_count - el.second);
+
+            // for (std::size_t i = 0; i < b_count; i++)
+            //{
+            if (b_count != 0)
+            {
+                list2.remove({el.first, b_count});
+            }
+            //}
+        }
+    }
+
+    /*for (std::multiset<std::string>::iterator it = set1.begin(); it != set1.end(); ++it)
     {
         std::cout << *it << std::endl;
         if (current == "")
@@ -162,6 +192,11 @@ ComparisonReport Comparator::compare(std::istream &a, std::istream &b)
     for (std::multiset<std::string>::iterator it = set2.begin(); it != set2.end(); ++it)
     {
         report.uniqueWords[1].add(*it);
+    }*/
+
+    for (auto el : list2)
+    {
+        report.uniqueWords[1].add(el.first);
     }
 
     return report;

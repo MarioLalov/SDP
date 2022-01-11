@@ -2,8 +2,9 @@
 
 HashTable::HashTable()
 {
-    table = new std::vector<std::pair<std::string, std::size_t>>[TABLE_SIZE];
+    table = new std::list<Element>[TABLE_SIZE];
     cells_occupied = 0;
+    total = 0;
 }
 
 std::size_t HashTable::getIndex(const std::string &word) const
@@ -22,6 +23,7 @@ std::size_t HashTable::getIndex(const std::string &word) const
 void HashTable::addWord(std::string new_word, std::size_t occurences)
 {
     std::size_t index = getIndex(new_word);
+    total += occurences;
 
     if (table[index].size() == 0)
     {
@@ -30,29 +32,30 @@ void HashTable::addWord(std::string new_word, std::size_t occurences)
     else
     {
         // increment word count
-        for (std::size_t i = 0; table[index].size(); i++)
+        for (auto& el : table[index])
         {
-            if (new_word == table[index][i].first)
-            {
-                table[index][i].second += occurences;
+            if (new_word == el.name)
+            {    
+                el.occurences += occurences;
 
                 return;
             }
         }
     }
 
-    table[index].push_back({new_word, occurences});
+    table[index].push_back(Element(new_word, occurences, last));
+    last = &table[index].back();
 }
 
 std::size_t HashTable::getOccurences(const std::string &word) const
 {
     std::size_t index = getIndex(word);
 
-    for (std::size_t i = 0; i < table[index].size(); i++)
+    for (auto const el : table[index])
     {
-        if (table[index][i].first == word)
+        if (el.name == word)
         {
-            return table[index][i].second;
+            return el.occurences;
         }
     }
 
@@ -64,8 +67,46 @@ std::size_t HashTable::numOccupied() const
     return cells_occupied;
 }
 
+std::list<std::pair<std::string, std::size_t>> HashTable::getInList() const
+{
+    std::list<std::pair<std::string, std::size_t>> words;
+    Element *cur = last;
+
+    // gather all elements
+    while (cur)
+    {
+        words.push_back({cur->name, cur->occurences});
+        cur = cur->previous;
+    }
+
+    return words;
+}
+
+std::size_t HashTable::getTotal() const
+{
+    return total;
+}
+
+std::multiset<std::string> HashTable::getInMultiSet() const
+{
+    std::multiset<std::string> words;
+    Element *cur = last;
+
+    // gather all elements
+    while (cur)
+    {
+        for (std::size_t i = 0; i < cur->occurences; i++)
+        {
+            words.insert(cur->name);
+        }
+
+        cur = cur->previous;
+    }
+
+    return words;
+}
+
 HashTable::~HashTable()
 {
     delete table;
-    std::cout << "destruct" << std::endl;
 }

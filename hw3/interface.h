@@ -36,9 +36,11 @@ public:
 	std::multiset<std::string> words() const;
 
 	// You can add additional members if you need to
+	std::list<std::pair<std::string, std::size_t>> wordsList() const;
+	std::size_t wordsTotal() const;
 private:
 	HashTable table;
-	std::list<std::string> stored_words;
+
 };
 
 ///
