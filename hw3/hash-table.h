@@ -7,7 +7,8 @@
 #include <sstream>
 #include <set>
 
-static const std::size_t TABLE_SIZE = 4096;
+//max hash value = FFFFF
+static const std::size_t TABLE_SIZE = 1048576;
 
 struct Element
 {
@@ -37,6 +38,7 @@ public:
     std::size_t getOccurences(const std::string &word) const;
     std::size_t numOccupied() const;
     std::size_t getTotal() const;
+    void remove(std::string word);
 
     std::list<std::pair<std::string, std::size_t>> getInList() const;
     std::multiset<std::string> getInMultiSet() const;

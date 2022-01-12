@@ -40,6 +40,11 @@ std::size_t WordsMultiset::wordsTotal() const
     return table.getTotal();
 }
 
+void WordsMultiset::remove(std::string word)
+{
+    table.remove(word);
+}
+
 void Comparator::read(std::istream &stream, WordsMultiset &table)
 {
     std::string cur_word;
@@ -78,18 +83,10 @@ ComparisonReport Comparator::compare(std::istream &a, std::istream &b)
     WordsMultiset table_b;
     read(b, table_b);
 
-    // std::multiset<std::string> set1 = table_a.words();
-    // std::multiset<std::string> set2 = table_b.words();
     std::list<std::pair<std::string, std::size_t>> list1 = table_a.wordsList();
-    std::list<std::pair<std::string, std::size_t>> list2 = table_b.wordsList();
 
     ComparisonReport report;
 
-    // std::string current = "";
-    // std::size_t count = 0;
-
-    // {1 1 1 2 3 4 4}
-    // {2 3 4 5}
     for (auto &el : list1)
     {
         std::size_t b_count = table_b.countOf(el.first);
@@ -100,100 +97,26 @@ ComparisonReport Comparator::compare(std::istream &a, std::istream &b)
         {
             report.uniqueWords[0].add(el.first, el.second - b_count);
 
-            // for (std::size_t i = 0; i < b_count; i++)
-            //{
+            // remove all occurences of el.first from the second table
             if (b_count != 0)
             {
-                list2.remove({el.first, b_count});
+                table_b.remove(el.first);
             }
-            //}
         }
         else
         {
             report.uniqueWords[1].add(el.first, b_count - el.second);
 
-            // for (std::size_t i = 0; i < b_count; i++)
-            //{
+            // remove all occurences of el.first from the second table
             if (b_count != 0)
             {
-                list2.remove({el.first, b_count});
+                table_b.remove(el.first);
             }
-            //}
         }
     }
 
-    /*for (std::multiset<std::string>::iterator it = set1.begin(); it != set1.end(); ++it)
-    {
-        std::cout << *it << std::endl;
-        if (current == "")
-        {
-            current = *it;
-            count = 0;
-        }
-
-        if (*it == current)
-        {
-            count++;
-            continue;
-        }
-        else
-        {
-            std::size_t b_count = table_b.countOf(current);
-
-            report.commonWords.add(current, b_count < count ? b_count : count);
-
-            if (count > b_count)
-            {
-                report.uniqueWords[0].add(current, count - b_count);
-
-                for (std::size_t i = 0; i < b_count; i++)
-                {
-                    set2.erase(set2.find(current));
-                }
-            }
-            else
-            {
-                report.uniqueWords[1].add(current, b_count - count);
-
-                for (std::size_t i = 0; i < b_count; i++)
-                {
-                    set2.erase(set2.find(current));
-                }
-            }
-
-            current = *it;
-            count = 1;
-        }
-    }
-
-    std::size_t b_count = table_b.countOf(current);
-
-    report.commonWords.add(current, b_count < count ? b_count : count);
-
-    if (count > b_count)
-    {
-        report.uniqueWords[0].add(current, count - b_count);
-
-        for (std::size_t i = 0; i < b_count; i++)
-        {
-            set2.erase(set2.find(current));
-        }
-    }
-    else
-    {
-        report.uniqueWords[1].add(current, b_count - count);
-
-        for (std::size_t i = 0; i < b_count; i++)
-        {
-            set2.erase(set2.find(current));
-        }
-    }
-
-    for (std::multiset<std::string>::iterator it = set2.begin(); it != set2.end(); ++it)
-    {
-        report.uniqueWords[1].add(*it);
-    }*/
-
+    //a list that contains only the unique elements for file2
+    std::list<std::pair<std::string, std::size_t>> list2 = table_b.wordsList();
     for (auto el : list2)
     {
         report.uniqueWords[1].add(el.first);

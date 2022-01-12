@@ -8,7 +8,7 @@
 
 int main(int argc, char *argv[])
 {
-    if(argc != 3)
+    if (argc != 3)
     {
         std::cout << "Invalid number of inputs!" << std::endl;
         return 1;
@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
     std::fstream file1(argv[1]);
     std::fstream file2(argv[2]);
 
-    if(!file1.is_open() || !file2.is_open())
+    if (!file1.is_open() || !file2.is_open())
     {
         std::cout << "A problem occured while opening the files" << std::endl;
         return 1;
@@ -26,16 +26,23 @@ int main(int argc, char *argv[])
     Comparator c;
     ComparisonReport report = c.compare(file1, file2);
 
-    std::cout << argv[1] << " contains " << report.uniqueWords[0].wordsTotal() + report.commonWords.wordsTotal() 
-            << " words and " << report.commonWords.wordsTotal() << " are present in " << argv[2] << " ("
-            << (100*report.commonWords.wordsTotal())/
-            (report.uniqueWords[0].wordsTotal() + report.commonWords.wordsTotal()) << "%)" << std::endl;
+    std::string file1_name(argv[1]);
+    file1_name = file1_name.substr(0, file1_name.find("."));
 
-    std::cout << argv[2] << " contains " << report.uniqueWords[1].wordsTotal() + report.commonWords.wordsTotal() 
-            << " words and " << report.commonWords.wordsTotal() << " are present in " << argv[1] << " ("
-            << (100*report.commonWords.wordsTotal())/
-            (report.uniqueWords[1].wordsTotal() + report.commonWords.wordsTotal()) << "%)" << std::endl;
-    
+    std::string file2_name(argv[2]);
+    file2_name = file2_name.substr(0, file2_name.find("."));
+
+    std::cout << file1_name << " contains " << report.uniqueWords[0].wordsTotal() + report.commonWords.wordsTotal()
+              << " words and " << report.commonWords.wordsTotal() << " are present in " << file2_name << " ("
+              << (100 * report.commonWords.wordsTotal()) /
+                     (report.uniqueWords[0].wordsTotal() + report.commonWords.wordsTotal())
+              << "%)" << std::endl;
+
+    std::cout << file2_name << " contains " << report.uniqueWords[1].wordsTotal() + report.commonWords.wordsTotal()
+              << " words and " << report.commonWords.wordsTotal() << " are present in " << file1_name << " ("
+              << (100 * report.commonWords.wordsTotal()) /
+                     (report.uniqueWords[1].wordsTotal() + report.commonWords.wordsTotal())
+              << "%)" << std::endl;
 
     /*std::stringstream a("one two three four two one");
     std::stringstream b("two one four one one");

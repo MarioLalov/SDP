@@ -10,7 +10,7 @@ HashTable::HashTable()
 std::size_t HashTable::getIndex(const std::string &word) const
 {
     std::string hash = md5(word);
-    hash = hash.substr(0, 3);
+    hash = hash.substr(0, 5);
     std::size_t index;
 
     std::stringstream ss;
@@ -75,6 +75,12 @@ std::list<std::pair<std::string, std::size_t>> HashTable::getInList() const
     // gather all elements
     while (cur)
     {
+        if(cur->occurences == 0)
+        {
+            cur = cur->previous;
+            continue;
+        }
+
         words.push_back({cur->name, cur->occurences});
         cur = cur->previous;
     }
@@ -95,6 +101,12 @@ std::multiset<std::string> HashTable::getInMultiSet() const
     // gather all elements
     while (cur)
     {
+        if(cur->occurences == 0)
+        {
+            cur = cur->previous;
+            continue;
+        }
+
         for (std::size_t i = 0; i < cur->occurences; i++)
         {
             words.insert(cur->name);
@@ -104,6 +116,19 @@ std::multiset<std::string> HashTable::getInMultiSet() const
     }
 
     return words;
+}
+
+void HashTable::remove(std::string word)
+{
+    std::size_t index = getIndex(word);
+
+    for (auto& el : table[index])
+    {
+        if (el.name == word)
+        {
+            el.occurences = 0;
+        }
+    }
 }
 
 HashTable::~HashTable()

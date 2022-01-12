@@ -129,7 +129,7 @@ TEST_CASE("Comparator works correctly for the streams [one two three four two on
 		REQUIRE(report.commonWords.countOfUniqueWords() == 3);
 		REQUIRE(report.uniqueWords[0].countOfUniqueWords() == 2);
 		REQUIRE(report.uniqueWords[1].countOfUniqueWords() == 1);
-	}
+	} 
 
 	SECTION("The common words are {one,one,two,four}")
 	{
