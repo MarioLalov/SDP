@@ -3,42 +3,36 @@
 #include <queue>
 #include <iostream>
 
-void Tree::_traverse(const Node* current)
-{
-    // traverse tree and copy values
-    if (current->GetParent())
-    {
-        new Node(current->GetValue(), GetNode(current->GetParent()->GetValue(), m_root));
-    }
-    else
-    {
-        m_root = new Node(current->GetValue(), nullptr);
-    }
-
-    std::vector<Node *> children = current->GetChildren();
-    for (std::size_t i = 0; i < children.size(); i++)
-    {
-        _traverse(children.at(i));
-    }
-}
-
 Tree::Tree(const Tree &other)
 {
-    // copy all elements
-    _traverse(other.m_root);
-    //total_employees = r.total_employees;
+    m_root = _copyHelper(other.m_root);
+}
+
+Node* Tree::_copyHelper(const Node* other)
+{
+    if(other == nullptr)
+    {
+        return nullptr;
+    }
+
+    Node* newNode = new Node(other->GetValue(), nullptr);
+
+    const std::vector<Node*> otherChildren = other->GetChildren();
+    for(std::size_t i = 0; i < otherChildren.size(); i++)
+    {
+        Node* copiedNode = _copyHelper(otherChildren.at(i));
+
+        if(copiedNode)
+            newNode->AddChild(copiedNode);
+    }
+
+    return newNode;
 }
 
 Tree::Tree(Node* root)
 {
-    // set head and count all subordinates of head
     m_root = root;
-    //unsigned int cnt = 0;
-
-    //count(head, cnt);
-    //total_employees = 1 + cnt;
 }
-
 
 Node* Tree::GetNode(int value, Node* current) const
 {
@@ -57,26 +51,130 @@ Node* Tree::GetNode(int value, Node* current) const
     return nullptr;
 }
 
+std::vector<Node*> Tree::GetNodes(int value) const
+{
+    std::vector<Node*> result;
+    _getNodesHelper(value, m_root, result);
+    std::cout << "Root Nodes: " << result.size() << std::endl;
+
+    return result;
+}
+
+void Tree::_getNodesHelper(int value, Node* current, std::vector<Node*>& result) const
+{
+    if(!current)
+        return;
+
+    if(value == current->GetValue())
+        result.push_back(current);
+
+    std::vector<Node*> children = current->GetChildren();
+    for(std::size_t i = 0; i < children.size(); i++)
+    {
+        _getNodesHelper(value, children.at(i), result);
+    }
+}
+
 bool Tree::Contains(Tree other)
 {
     //do for all nodes with such value
-    //std::cout << "Enter Contains()" << std::endl;
-    Node* rootNode = GetNode(other.m_root->GetValue(), m_root);
-    Tree treeCopy = _getSubtreeCopy(rootNode);
-    return treeCopy._compareWith(other);
+    std::vector<Node*> rootNodes = GetNodes(other.m_root->GetValue());
+    std::cout << "Root Nodes: " << rootNodes.size() << std::endl;
+    for(std::size_t i = 0; i < rootNodes.size(); i++)
+    {
+        Tree treeCopy = _getSubtreeCopy(rootNodes.at(i));
+        if(treeCopy._compareWith(other))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void Tree::Remove(Tree other)
+{
+    while(this->Contains(other))
+    {
+        _removeSubtree(other);
+    }
+}
+
+void Tree::_removeSubtree(const Tree& other)
+{
+    std::vector<Node*> rootNodes = GetNodes(other.m_root->GetValue());
+    for(std::size_t i = 0; i < rootNodes.size(); i++)
+    {
+        Tree treeCopy = _getSubtreeCopy(rootNodes.at(i));
+        if(treeCopy._compareWith(other))
+        {
+            
+            Node* parentNode = treeCopy.m_root->GetParent();
+
+            std::vector<Node*> noRemoveNodes;
+            _getNoRemoveNodes(treeCopy.m_root, other.m_root, noRemoveNodes);
+
+            for(std::size_t i = 0; i < noRemoveNodes.size(); i++)
+            {
+                Node* sumNode = noRemoveNodes.at(i)->CreateSumNode();
+                try
+                {
+                    parentNode->AddChild(sumNode);
+                }
+                catch(const std::invalid_argument&)
+                {
+                    delete sumNode;
+                }
+            }
+
+            delete rootNodes.at(i);
+        }
+    }
+}
+
+void Tree::_getNoRemoveNodes(Node* left, const Node* right, std::vector<Node*>& noRemoveNodes)
+{
+    std::vector<Node*> lChildren = left->GetChildren();
+    std::vector<Node*> rChildren = right->GetChildren();
+
+    bool isPresent = false;
+    for(std::size_t i = 0; i < lChildren.size(); i++)
+    {
+        for(std::size_t j = 0; j < rChildren.size(); j++)
+        {
+            if(lChildren.at(i)->GetValue() == rChildren.at(j)->GetValue())
+            {
+                isPresent = true;
+            }
+        }
+
+        if(!isPresent)
+        {
+            // detach
+            lChildren.at(i)->SetParent(nullptr);
+            noRemoveNodes.push_back(lChildren.at(i));
+        }
+
+        isPresent = false;
+    }
+
+    for(std::size_t i = 0; i < rChildren.size(); i++)
+    {
+        // get correct children from left
+        for(std::size_t j = 0; j < lChildren.size(); j++)
+        {
+            if(lChildren.at(i)->GetValue() == rChildren.at(j)->GetValue())
+            {
+                _getNoRemoveNodes(lChildren.at(j), rChildren.at(i), noRemoveNodes);
+            }
+        }
+    }
 }
 
 Tree Tree::_getSubtreeCopy(Node* subtreeRoot) const
 {
     Tree dummyTree(subtreeRoot);
-
-    Node* dummyParentNode = dummyTree.m_root->GetParent();
-    if(dummyParentNode)
-        dummyTree.m_root->SetParent(nullptr);
-
     Tree copyTree(dummyTree);
-
-    dummyTree.m_root->SetParent(dummyParentNode);
 
     return copyTree;
 }
@@ -88,46 +186,55 @@ void Tree::_sortTreeChildren()
 
 bool Tree::_compareWith(Tree other)
 {
-    //std::cout << "Enter _compareWith()" << std::endl;
-    this->_sortTreeChildren();
-    other._sortTreeChildren();
-
     return _compareWithHelper(this->m_root, other.m_root);
 }
 
 bool Tree::_compareWithHelper(Node* left, Node* right)
 {
-    //std::cout << "Enter _compareWithHelper()" << std::endl;
-    if(right->GetChildren().empty())
-    {
-        return true;
-    }
-    else if(left->GetChildren().empty())
-    {
-        return false;
-    }
-    else if(right->GetChildren().size() > left->GetChildren().size())
+    if(left->GetValue() != right->GetValue())
     {
         return false;
     }
 
     //compare children
-    const std::vector<Node*>& lChildren = right->GetChildren();
-    const std::vector<Node*>& rChildren = right->GetChildren();
+    std::vector<Node*> lChildren = left->GetChildren();
+    std::vector<Node*> rChildren = right->GetChildren();
+    
+    //compare children values
+    bool isPresent = false;
+    for(std::size_t i = 0; i < lChildren.size(); i++)
+    {
+        for(std::size_t j = 0; j < rChildren.size(); j++)
+        {
+            if(lChildren.at(i)->GetValue() == rChildren.at(j)->GetValue())
+            {
+                isPresent = true;
+            }
+        }
+
+        if(!isPresent)
+        {
+            lChildren.erase(lChildren.begin() + i);
+        }
+
+        isPresent = false;
+    }
+
+    if(lChildren.size() != rChildren.size())
+    {
+        return false;
+    }
 
     for(std::size_t i = 0; i < rChildren.size(); i++)
     {
-        if(lChildren.at(i)->GetValue() != rChildren.at(i)->GetValue())
+        // if its not contained in a child
+        if(!_compareWithHelper(lChildren.at(i), rChildren.at(i)))
         {
             return false;
         }
     }
 
-    
-    for(std::size_t i = 0; i < rChildren.size(); i++)
-    {
-        _compareWithHelper(lChildren.at(i), rChildren.at(i));
-    }
+    return true;
 }
 
 Tree::~Tree()
@@ -138,6 +245,10 @@ Tree::~Tree()
     }
 }
 
+void Tree::Print()
+{
+    m_root->Print();
+}
 
 Tree* CreateTree(std::istream& stream)
 {
