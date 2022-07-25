@@ -17,11 +17,28 @@ Node::Node(int value, Node *parent)
 
 void Node::AddChild(Node* childToBeAdded)
 {
-    if(childToBeAdded->m_value == m_value)
-        throw std::invalid_argument("Invalid child value.");
+    for(const auto& child : m_children)
+    {
+        if(childToBeAdded->m_value == child->m_value)
+            throw std::invalid_argument("Invalid child value.");
+    }
 
     childToBeAdded->SetParent(this);
     m_children.push_back(childToBeAdded);
+}
+
+void Node::RemoveChild(int value)
+{
+    for(std::size_t i = 0; i < m_children.size(); i++)
+    {
+        if(value == m_children.at(i)->m_value)
+        {
+            m_children.erase(m_children.begin() + i);
+
+            return;
+        }
+    }
+
 }
 
 void Node::SortChildren()
@@ -53,6 +70,7 @@ void Node::Print()
     // Create an empty queue for level order traversal 
     std::queue<Node *> q; 
   
+    Node* currentParent = nullptr;
     // Enqueue Root and initialize height 
     q.push(this); 
   
@@ -66,8 +84,13 @@ void Node::Print()
         // Enqueue all nodes of next level 
         while (nodeCount > 0)
         { 
-            Node *node = q.front(); 
-            std::cout << node->m_value << " "; 
+            Node *node = q.front();  
+            if(node->GetParent() != currentParent)
+            {
+                std::cout << "| ";
+                currentParent = node->GetParent();
+            }
+            std::cout << node->m_value << " ";
             q.pop(); 
 
             for(std::size_t i = 0; i < node->m_children.size(); i++)
@@ -83,7 +106,11 @@ void Node::Print()
 Node* Node::CreateSumNode()
 {
     int sumValue = 0;
-    _createSumNodeHelper(this, sumValue);
+    std::cout << "Children: " << m_children.size() << std::endl;
+    for(auto& node : m_children)
+    {
+        _createSumNodeHelper(node, sumValue);
+    }
 
     return new Node(sumValue, nullptr);
 }

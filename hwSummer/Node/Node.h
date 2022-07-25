@@ -13,6 +13,7 @@ public:
     std::vector<Node *> GetChildren() const {return m_children;}
     std::size_t GetChildrenNumber() const {return m_children.size();}
     Node* GetParent() const {return m_parent;}
+    void RemoveChild(int value);
 
     Node* CreateSumNode();
 

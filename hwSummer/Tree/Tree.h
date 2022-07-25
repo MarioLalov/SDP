@@ -19,6 +19,7 @@ public:
     ~Tree() noexcept;
 private:
     Node *m_root = nullptr;
+    bool isDummy = false;
     
     Tree _getSubtreeCopy(Node* subtreeRoot) const;
 

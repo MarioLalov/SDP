@@ -31,6 +31,7 @@ Node* Tree::_copyHelper(const Node* other)
 
 Tree::Tree(Node* root)
 {
+    isDummy = true;
     m_root = root;
 }
 
@@ -55,7 +56,6 @@ std::vector<Node*> Tree::GetNodes(int value) const
 {
     std::vector<Node*> result;
     _getNodesHelper(value, m_root, result);
-    std::cout << "Root Nodes: " << result.size() << std::endl;
 
     return result;
 }
@@ -79,7 +79,6 @@ bool Tree::Contains(Tree other)
 {
     //do for all nodes with such value
     std::vector<Node*> rootNodes = GetNodes(other.m_root->GetValue());
-    std::cout << "Root Nodes: " << rootNodes.size() << std::endl;
     for(std::size_t i = 0; i < rootNodes.size(); i++)
     {
         Tree treeCopy = _getSubtreeCopy(rootNodes.at(i));
@@ -107,16 +106,17 @@ void Tree::_removeSubtree(const Tree& other)
     {
         Tree treeCopy = _getSubtreeCopy(rootNodes.at(i));
         if(treeCopy._compareWith(other))
-        {
-            
-            Node* parentNode = treeCopy.m_root->GetParent();
+        {   
+            Node* parentNode = rootNodes.at(i)->GetParent();
 
             std::vector<Node*> noRemoveNodes;
             _getNoRemoveNodes(treeCopy.m_root, other.m_root, noRemoveNodes);
 
-            for(std::size_t i = 0; i < noRemoveNodes.size(); i++)
-            {
-                Node* sumNode = noRemoveNodes.at(i)->CreateSumNode();
+            for(std::size_t j = 0; j < noRemoveNodes.size(); j++)
+            {   
+                Node* sumNode = noRemoveNodes.at(j)->GetParent()->CreateSumNode();
+                // detach
+                noRemoveNodes.at(j)->SetParent(nullptr);
                 try
                 {
                     parentNode->AddChild(sumNode);
@@ -127,6 +127,7 @@ void Tree::_removeSubtree(const Tree& other)
                 }
             }
 
+            parentNode->RemoveChild(rootNodes.at(i)->GetValue());
             delete rootNodes.at(i);
         }
     }
@@ -150,8 +151,6 @@ void Tree::_getNoRemoveNodes(Node* left, const Node* right, std::vector<Node*>& 
 
         if(!isPresent)
         {
-            // detach
-            lChildren.at(i)->SetParent(nullptr);
             noRemoveNodes.push_back(lChildren.at(i));
         }
 
@@ -220,7 +219,7 @@ bool Tree::_compareWithHelper(Node* left, Node* right)
         isPresent = false;
     }
 
-    if(lChildren.size() != rChildren.size())
+    if(lChildren.size() < rChildren.size())
     {
         return false;
     }
@@ -239,7 +238,7 @@ bool Tree::_compareWithHelper(Node* left, Node* right)
 
 Tree::~Tree()
 {
-    if (m_root)
+    if (m_root && !isDummy)
     {
         delete m_root;
     }
@@ -286,15 +285,12 @@ Tree* CreateTree(std::istream& stream)
         for(const auto& section : sections)
         { 
             std::vector<int> result = toInts(section);
-            //std::cout << "Parent: " << previousNodes.front()->GetValue() << std::endl;
             for(const auto& value : result)
             {
-                //std::cout << value;
                 Node* newNode = new Node(value, previousNodes.front());
                 previousNodes.push(newNode);
             }
 
-            //std::cout << std::endl;
             previousNodes.pop();
         }
 
