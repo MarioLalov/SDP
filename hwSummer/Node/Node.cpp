@@ -66,47 +66,66 @@ void Node::_sortChildrenHelper(Node* currentNode)
 }
 
 void Node::Print()
-{
-    // Create an empty queue for level order traversal 
-    std::queue<Node *> q; 
+{ 
+    std::queue<Node *> nodeQueue;
+    std::queue<Node *> parentQueue; 
   
-    Node* currentParent = nullptr;
-    // Enqueue Root and initialize height 
-    q.push(this); 
+    nodeQueue.push(this); 
+    parentQueue.push(nullptr);
   
-    while (q.empty() == false) 
+    std::cout << "| ";
+    while (nodeQueue.empty() == false) 
     { 
-        // nodeCount (queue size) indicates number
-        // of nodes at current level. 
-        int nodeCount = q.size(); 
-  
-        // Dequeue all nodes of current level and 
-        // Enqueue all nodes of next level 
+        int nodeCount = nodeQueue.size();
+        // how many inital parents
+        int totalParentCount = parentQueue.size(); 
+   
         while (nodeCount > 0)
         { 
-            Node *node = q.front();  
-            if(node->GetParent() != currentParent)
+            Node *node = nodeQueue.front();  
+            while(!parentQueue.empty() && node->GetParent() != parentQueue.front())
             {
                 std::cout << "| ";
-                currentParent = node->GetParent();
+                parentQueue.pop();
+                totalParentCount--;
             }
+
             std::cout << node->m_value << " ";
-            q.pop(); 
+            nodeQueue.pop(); 
 
             for(std::size_t i = 0; i < node->m_children.size(); i++)
             {
-                q.push(node->m_children.at(i));
+                nodeQueue.push(node->m_children.at(i));
             }
+            parentQueue.push(node);
             nodeCount--; 
         } 
-        std::cout << std::endl; 
-    } 
+
+        // pop all childless parents
+        while(totalParentCount > 0)
+        {
+            std::cout << "| ";
+            parentQueue.pop();
+            totalParentCount--;
+        }
+        //if(parentQueue.size() > 1)
+          //  parentQueue.pop();
+        std::cout << std::endl << "| "; 
+    }
+
+    // print leaves
+    int parentsLeft = parentQueue.size(); 
+    while(parentsLeft > 0)
+    {
+        std::cout << "| ";
+        parentQueue.pop();
+        parentsLeft--;
+    }
 }
 
 Node* Node::CreateSumNode()
 {
     int sumValue = 0;
-    std::cout << "Children: " << m_children.size() << std::endl;
     for(auto& node : m_children)
     {
         _createSumNodeHelper(node, sumValue);
